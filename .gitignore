@@ -67,6 +67,9 @@ plateforme/*.tgz
 # Vim
 .*.swp
 
+# Emacs
+**/**~
+
 # macOS
 .DS_Store
 .AppleDouble
