@@ -1,0 +1,22 @@
+# Compilation #
+
+## BINSEC
+
+The following usual steps should do the trick:
+
+```
+% autoconf
+% ./configure
+% make 
+% make install 
+```
+
+
+# Help
+
+```
+binsec --help
+```
+
+
+
