@@ -13,10 +13,13 @@ published at 2020 IEEE Symposium on Security and Privacy (SP).
 ``` bash
 # Install Ocaml and prerequisite packages for BINSEC via OPAM
 sudo apt update
-sudo apt install ocaml ocaml-native-compilers camlp4-extra opam
+sudo apt install ocaml ocaml-native-compilers camlp4-extra opam protobuf-compiler libgmp-dev libzmq3-dev llvm-6.0-dev cmake pkg-config
 opam init
 opam switch 4.05.0
-opam install merlin ocp-indent caml-mode tuareg menhir ocamlgraph ocamlfind piqi zmq.5.0.0 zarith llvm.6.0.0
+opam install menhir ocamlgraph piqi zarith zmq.5.0.0 llvm.6.0.0 oUnit
+
+# Additional packages (optional)
+# opam install merlin ocp-indent caml-mode tuareg ocamlfind
 
 # Checkout source code
 git clone https://github.com/binsec/Rel.git binsec-rel
