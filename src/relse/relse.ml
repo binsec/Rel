@@ -456,7 +456,8 @@ struct
         (* Gather (and possibly verifies) the insecurity checks at the
            current instruction *)
         let state = State.update_state (IS.eval) state in
-
+        Env.set_current_state state;
+        
         (* Evaluate the instruction
            TODO: harmonization of functions / style *)
         match dba_instr with
@@ -475,7 +476,6 @@ struct
           ite ~condition ~jump_target ~local_target
 
         | Dba.Instr.DJump (e, _) ->
-
           dynamic_jump ~jump_expr:e
 
         | Dba.Instr.Stop (Some Dba.KO) ->

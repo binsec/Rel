@@ -33,8 +33,7 @@ module Insecurity_formula :
 sig
   type t
   val empty : t
-  val add_checks : Formula.bv_term Rel_expr.t list -> t -> t
-  val add_pc : Formula.bl_term -> t -> t
+  val add_checks : Formula.bl_term -> Formula.bv_term Rel_expr.t list -> t -> t
   val solve : Relse_stats.query_type -> Path_state.t -> t -> Path_state.t
 end = struct
   
@@ -45,8 +44,8 @@ end = struct
 
     pc : Formula.bl_term option;
     (** The path-constraint under which the insecurty formula must be
-       satifsaible *)
-  }
+       satifsaible *) 
+ }
 
   let empty =
     let check_list = []
@@ -54,8 +53,25 @@ end = struct
     in { check_list; pc }
 
   let check_to_formula rexpr = Rel_expr.fold0 Formula.mk_bv_distinct rexpr
+
+
+  (** [add_pc pc t] Adds the paths contraint [pc] to the insecurity
+      formula [t]. Fails if the insecurity formula already has a
+      different path constraint. *)
+  let add_pc pc t =
+    Logger.debug ~level:10 "[Insecurity] Add pc to insecurity formula: %a"
+      Formula_pp.pp_bl_term pc;
+    match t.pc with
+    | Some pc' when not @@ Formula.equal_bl_term pc pc' ->
+      (Format.printf "[Insecurity] %a / %a"
+         Formula_pp.pp_bl_term pc
+         Formula_pp.pp_bl_term pc';
+       failwith "[Relse][Insecurity] Cannot add path constraint to \
+                 insecurity formula.")
+    | _ -> { t with pc = Some pc }
+
   
-  let add_checks new_checks t =   
+  let add_checks pc new_checks t =
     let append_unique current_list new_check =
       (* Check if the expression is relational *)
       if not (Rel_expr.(deduplicate_eq Formula.equal_bv_term new_check |> is_relational))
@@ -100,17 +116,9 @@ end = struct
             current_list
           end
     in
+    let t = add_pc pc t in
     { t with check_list = List.fold_left append_unique t.check_list new_checks } 
 
-  (** [add_pc pc t] Adds the paths contraint [pc] to the insecurity
-     formula [t]. Fails if the insecurity formula already has a
-     different path constraint. *)
-  let add_pc pc t =
-    match t.pc with
-    | Some pc' when not @@ Formula.equal_bl_term pc pc' ->
-      failwith "[Relse][Insecurity] Cannot add path constraint to \
-                insecurity formula."
-    | _ -> { t with pc = Some pc }
 
   (* Add the negation of the insecurity checks to ps *)
   let untaint_checks t ps =
@@ -239,12 +247,12 @@ module CT : PROPERTY = struct
     | DJump (expr,_) ->
       (* Get the relational expression to leak *)
       let r_expr = Relse_smt.Translate.expr (Path_state.symbolic_state ps) expr in
-      Insecurity_formula.add_checks [r_expr] t
+      Insecurity_formula.add_checks (Path_state.get_pc ps) [r_expr] t
     (* Add it to the insecurity query *)
     | If (condition,_,_)
       when Instruction.is_conditional_jump (Path_state.get_instruction ps) ->
       let r_expr = Relse_smt.Translate.expr (Path_state.symbolic_state ps) condition in
-      Insecurity_formula.add_checks [r_expr] t
+      Insecurity_formula.add_checks (Path_state.get_pc ps) [r_expr] t
     (* Other instructions *)
     | If (_,_,_)
     | Assign (_,_,_) 
@@ -266,7 +274,7 @@ module CT : PROPERTY = struct
   | Var _ | Cst _ -> t
   | Load (_, _, idx) ->
     let r_expr = Relse_smt.Translate.expr (Path_state.symbolic_state ps) idx in
-    Insecurity_formula.add_checks [r_expr] t
+    Insecurity_formula.add_checks (Path_state.get_pc ps) [r_expr] t
     |> add_mem_checks_expr ps idx
   | Binary (_, op1, op2) ->
     add_mem_checks_expr ps op1 t
@@ -285,7 +293,7 @@ module CT : PROPERTY = struct
     | Var _ | Restrict _ -> t
     | Store (_, _, idx) ->
     let r_expr = Relse_smt.Translate.expr (Path_state.symbolic_state ps) idx in
-    Insecurity_formula.add_checks [r_expr] t
+    Insecurity_formula.add_checks (Path_state.get_pc ps) [r_expr] t
 
   (** Add insecurity checks relative to memory accesses *)
   let add_mem_checks ps t =
@@ -307,8 +315,7 @@ module CT : PROPERTY = struct
     | Print (_,_) -> t
 
   let add_checks ps t =
-    add_cf_checks ps t |> add_mem_checks ps |>
-    Insecurity_formula.add_pc @@ Path_state.get_pc ps
+    add_cf_checks ps t |> add_mem_checks ps
 
   let solve qtype ps t =
     let ps = Insecurity_formula.solve qtype ps t in
@@ -404,6 +411,8 @@ module Insecurity_State(Prop:PROPERTY) : INSECURITY_STATE = struct
     ps, Prop.create ()
   
   let force_check ?(qtype=Relse_stats.Insecurity) ps t =
+    Logger.debug ~level:3 "[Insecurity][check] Checking insecurity at address %a"
+      Virtual_address.pp (Path_state.virtual_address ps);
     match Relse_options.LeakInfo.get () with
     | InstrLeak ->
       (* If an insecurity query has already been found at this address, then abort *)
@@ -412,7 +421,7 @@ module Insecurity_State(Prop:PROPERTY) : INSECURITY_STATE = struct
       if Relse_utils.AddressList.find current_stm insecure_addresses then        
         begin
           Relse_stats.add_spared_check ();
-          Logger.debug ~level:2 "[Insecurity][spared] %a already in the list"
+          Logger.debug ~level:8 "[Insecurity][spared] %a already in the list"
             Virtual_address.pp
             Dba_types.(Caddress.to_virtual_address (Statement.location current_stm));
           (* Drop current insecurity checks *)
@@ -449,7 +458,9 @@ module Insecurity_State(Prop:PROPERTY) : INSECURITY_STATE = struct
       force_check ~qtype ps t
     | Block ->                      (* Control-Flow level check *)
       let qtype = Relse_stats.Insecurity in
-      force_check ~qtype ps t
+      if control_flow_instr ps  
+      then force_check ~qtype ps t
+      else ps,t
     | Never -> ps, t
 
   let eval ps t =
