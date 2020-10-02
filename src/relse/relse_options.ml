@@ -153,7 +153,8 @@ module SymbolicStore =
       let assoc_map = [
         "sse", Sse;
         "sc", SelfComposed;
-        "sha", Shadow]
+        "sha", Shadow;
+        "rel", Shadow]
     end)
 
 type memory_type =
