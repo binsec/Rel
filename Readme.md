@@ -7,7 +7,9 @@ If you are interested, you can read the
 [paper](https://binsec.github.io/assets/publications/papers/2020-sp.pdf),
 published at 2020 IEEE Symposium on Security and Privacy (SP).
 
-*Docker and experimental evaluation incoming*
+Benchmarks to test Binsec/Rel: https://github.com/binsec/rel_bench
+
+*Docker incoming*
 
 ## Installation
 ``` bash
