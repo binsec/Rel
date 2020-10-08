@@ -9,9 +9,31 @@ published at 2020 IEEE Symposium on Security and Privacy (SP).
 
 Benchmarks to test Binsec/Rel: https://github.com/binsec/rel_bench
 
-*Docker incoming*
-
 ## Installation
+### Docker
+The docker contains necessary files for running Binsec/Rel and the benchmarks to test it.
+
+1. Download the [image](https://leslyann-daniel.fr/ressources/docker/binsec-rel.tar).
+
+2. Import the image:
+```
+docker load < binsec-rel.tar
+```
+
+3. Run the container:
+```
+docker run -it binsec-rel /bin/bash
+```
+
+4. Run `./update.sh` to get the latest version of Binsec/Rel.
+
+5. Run the tests with `cd rel_bench; make tests`
+
+You are ready to go ! (Read https://github.com/binsec/rel_bench for examples on how to use Binsec/Rel).
+
+### From sources
+**Requirements**: boolector (recommended boolector-3.2.0), z3, yices or cvc4.
+
 ``` bash
 # Install Ocaml and prerequisite packages for BINSEC via OPAM
 sudo apt update
