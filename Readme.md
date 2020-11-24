@@ -13,7 +13,7 @@ Benchmarks to test Binsec/Rel: https://github.com/binsec/rel_bench
 ### Docker
 The docker contains necessary files for running Binsec/Rel and the benchmarks to test it.
 
-1. Download the [image](https://leslyann-daniel.fr/ressources/docker/binsec-rel.tar).
+1. Download the [image](https://doi.org/10.5281/zenodo.4134497).
 
 2. Import the image:
 ```
