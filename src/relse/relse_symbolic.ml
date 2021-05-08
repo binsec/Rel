@@ -695,7 +695,8 @@ end = struct
     let pack =
       match MemoryType.get () with
       | MemStd -> Std (StandardEnv.create ~store_type)
-      | _ when store_type = SelfComposed -> failwith "SelfComp Memory with row not implemented yet"
+      | _ when store_type = SelfComposed ->
+        failwith "SelfComp Memory with row not implemented yet"
       | MemList -> List (ListEnv.create ~store_type)
       | MemMap -> Map (MapEnv.create ~store_type) in
     let initialisation = BH.create 100 in
@@ -1080,6 +1081,8 @@ struct
          add (BvVar v') (BvVar v) u (* We can deduce v  = v' *)
 
        (* BvUnop *)
+       | BvUnop (BvExtract itv, bv), BvUnop (BvExtract itv', bv') when itv = itv' ->
+         untaint_bv u (Rel_expr.mk_rel bv bv')
        | BvUnop (BvNot,bv), BvUnop (BvNot,bv')
        | BvUnop (BvNeg,bv), BvUnop (BvNeg,bv') ->
          untaint_bv u (Rel_expr.mk_rel bv bv')
@@ -1131,8 +1134,7 @@ struct
         * | BvBnop of bv_bnop * bv_term * bv_term
         * | BvIte  of bl_term * bv_term * bv_term *)
 
-       (* | _ -> failwith "[untaint_bv] Not implemented yet") *)
-       | _ -> Format.printf "[untaint_bv] TODO: I a lazy tonight"; u)
+       | _ -> failwith "[untaint_bv] Not implemented yet" )
     | Simple _ -> u
   
   let subst_bv u bv =
@@ -1268,18 +1270,15 @@ struct
   
   (* { Variables } *)
        
-  let declare high name var_type t =
+  let declare level name var_type t =
+    Logger.debug ~level:2 "[Symbolic state][declare] %s as %s" name
+      (Relse_utils.level_to_string level);
+    let high = match level with
+      | Relse_utils.High -> true
+      | Relse_utils.Low -> false in
     let formula, var_store =
       VarStore.declare ~high name var_type t.formula t.var_store
     in { t with formula; var_store }
-    
-  let declare_high name sort t =
-    Logger.debug ~level:1 "[Symbolic state][declare] %s as High" name;
-    declare true name sort t
-
-  let declare_low name sort t =
-    Logger.debug ~level:1 "[Symbolic state][declare] %s as Low" name;
-    declare false name sort t
 
   let var_load t name size =
     let r_val = VarStore.load t.var_store name size

@@ -394,6 +394,7 @@ type instruction_kind =
   | Pslldq of genopxmm * int
   | Pclmulqdq of xmm_mm * simd_size * genopxmm * genopxmm * int
   | Ptest of xmm_mm * simd_size * genopxmm * genopxmm
+  | Mfence
   | Movups of genopxmm * genopxmm
   | Movupd of genopxmm * genopxmm
   | Xlat of address_size_mode

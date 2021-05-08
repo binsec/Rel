@@ -2640,6 +2640,7 @@ let instruction_to_dba rep sreg nextaddr opcode instruction =
   | Cmps mode -> lift_cmps mode rep sreg
   | CmpXchg (mode, gop1, gop2) -> lift_cmpXchg mode gop1 gop2 sreg
   | Test (mode, gop1, gop2) -> lift_test mode gop1 gop2 sreg
+  | Mfence -> [ Predba.serialize Dba.SerializeMemory ]
   | Movd (xmm, pos, gop1, gop2) -> lift_movd xmm pos gop1 gop2 sreg
   | MovQ (xmm, mm, dst, src) ->
     assign_xmm_zero ~dst 0 63 ~src 0 63 xmm mm sreg

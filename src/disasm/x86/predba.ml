@@ -35,7 +35,7 @@ type 'a t =
   | Undef of Dba.LValue.t
   | Nondet of Dba.LValue.t * Dba.region
   | Stop of Dba.state
-
+  | Serialize of Dba.serialize_type
 
 let assign lval e =
   Logger.debug ~level:5
@@ -63,6 +63,8 @@ let undefined lval = Undef lval
 
 let non_deterministic lval r = Nondet (lval, r)
 
+let serialize st = Serialize st
+
 let stop s = Stop s
 
 let needs_termination = function
@@ -76,6 +78,7 @@ let needs_termination = function
   | Dba.Instr.Undef _
   | Dba.Instr.If _
   | Dba.Instr.Nondet _
+  | Dba.Instr.Serialize _
   | Dba.Instr.SJump _ -> true
 
 
@@ -87,6 +90,7 @@ let to_dba_instruction next_id = function
   | Nondet (lhs, region) -> Dba.Instr.non_deterministic lhs ~region next_id
   | SJump (dst, tag) -> Dba.Instr.static_jump dst ?tag
   | DJump (dst, tag) -> Dba.Instr.dynamic_jump dst ?tag
+  | Serialize st -> Dba.Instr.serialize st next_id
   | Stop st -> Dba.Instr.stop (Some st)
 
 (* [block_addr] is the physical address of the current DBA block.

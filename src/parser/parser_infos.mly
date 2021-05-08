@@ -36,6 +36,7 @@
   | SJump of labeladdress * Tag.t option
   | DJump of Expr.t * Tag.t option
   | If of Expr.t * labeladdress * labeloffset
+  | Serialize of serialize_type * id
   | Stop of state option
   | Assert of Expr.t * id
   | Assume of Expr.t * id
@@ -103,6 +104,7 @@
         )
         | Assign(lhs, expr, a) -> Instr.assign lhs expr a
         | DJump(dst, tag) -> Instr.dynamic_jump dst ?tag
+        | Serialize (st, id) -> Instr.serialize st id
         | Stop tag -> Instr.stop tag
         | Undef (lhs, a) -> Instr.undefined lhs a
         | Malloc (a, b, c) -> Instr.malloc a b c
@@ -151,6 +153,9 @@
              incindex addr 1, last_instr]
         | Dba.Instr.SJump _
         | Dba.Instr.DJump _ as i -> l @ [(addr, i)]
+        | Dba.Instr.Serialize (st, _) ->
+           l @ [addr, Instr.serialize st (addr.id + 1);
+               incindex addr 1, last_instr]
         | Dba.Instr.Stop _ -> l @ [addr, i]
         | Dba.Instr.Malloc (a, b, _) ->
            l @ [addr, Instr.malloc a b (addr.id + 1);
@@ -189,6 +194,7 @@
           | Dba.Instr.Assume _
           | Dba.Instr.NondetAssume _
           | Dba.Instr.Nondet _
+          | Dba.Instr.Serialize _
           | Dba.Instr.Print _ -> Dba_types.Instruction.set_successor i (addr.id + 1)
         in aux (incindex addr 1) insns (l @ [addr, chained_i])
     in
@@ -210,6 +216,7 @@
 
 %token PLUS MINUS MULTU MULTS DIVU DIVS MODU MODS
 %token UNDEF STATE_OK STATE_KO
+%token SERIALIZE SERIALIZE_MEMORY
 %token PRINT
 %token ASSERT ASSUME NONDET NONDETASSUME STORELOAD CONSTANT STACK MALLOC FREE LINEAR
 %token AND OR XOR NOT
@@ -409,6 +416,7 @@ inst:
  | IFJUMP cond  NEXT IDENT ELSE NEXT IDENT SEMICOLON {
    If ($2, (Label $4), (LabelIf $7))
  }
+ | SERIALIZE SERIALIZE_MEMORY SEMICOLON { Serialize (SerializeMemory, 0) }
  | STOP STATE_OK SEMICOLON { Stop (Some OK) }
  | STOP STATE_KO SEMICOLON { Stop (Some KO) }
  | STOP SEMICOLON { Stop None }

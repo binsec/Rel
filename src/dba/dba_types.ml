@@ -380,6 +380,7 @@ module Instruction = struct
     | Malloc (lv, e, _) -> malloc lv e id
     | Free (e, _) -> free e id
     | Print (ds, _) -> print ds id
+    | Serialize (st, _) -> serialize st id
     | Stop _
     | SJump _
     | DJump _ -> i
@@ -404,6 +405,7 @@ module Instruction = struct
     | Free (e, id) -> free e (new_id id)
     | Print (ds, id) -> print ds (new_id id)
     | SJump (jt, tag) -> static_jump ?tag (new_jt jt)
+    | Serialize (st, id) -> serialize st (new_id id)
     | Stop _
     | DJump _ -> instr
 
@@ -421,7 +423,8 @@ module Instruction = struct
     | Instr.Undef (_, i)
     | Instr.Malloc (_, _, i)
     | Instr.Free (_, i)
-    | Instr.Print (_, i)  -> [Dba.Jump_target.inner i]
+    | Instr.Print (_, i)
+    | Instr.Serialize (_, i) -> [Dba.Jump_target.inner i]
     | Instr.Stop _ -> []
     | Instr.SJump (jt, _) -> [jt]
     | Instr.If (_, jt, i) -> [jt; Dba.Jump_target.inner i]
@@ -436,6 +439,7 @@ module Instruction = struct
       { defs = LValue.variables lv;
         uses = Expr.variables e;}
     | Instr.Print _
+    | Instr.Serialize _
     | Instr.Stop _
     | Instr.SJump _ -> no_defs Basic_types.String.Set.empty
 
@@ -463,6 +467,7 @@ module Instruction = struct
         uses = Expr.temporaries e;
       }
     | Instr.Print _
+    | Instr.Serialize _
     | Instr.Stop _
     | Instr.SJump _ -> { defs = Basic_types.String.Set.empty;
                          uses = Basic_types.String.Set.empty; }
@@ -490,6 +495,7 @@ module Instruction = struct
   let outer_jumps instr =
     match instr with
     | Instr.Assign _
+    | Instr.Serialize _
     | Instr.Stop _
     | Instr.Assert _
     | Instr.Assume _

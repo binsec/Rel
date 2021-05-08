@@ -37,6 +37,7 @@ let instr_succ addr instr =
   | Undef _
   | Free _
   | Malloc _
+  | Serialize _
   | Print _ -> Some([Dba.JInner (addr.Dba.id + 1)]) (* no jump *)
   | DJump _ -> None (* unknown *)
   | SJump (jt, _) -> Some([jt])
@@ -65,10 +66,8 @@ let rec populate_from cfg vaddr depth =
   let open Sse_options in
   Logger.debug ~level:4 "populate %a (%d)" Virtual_address.pp vaddr depth;
   let stop =
-    let open! Basic_types.Int in
-    let int_addr = Virtual_address.to_int vaddr in
-    Set.mem int_addr (GoalAddresses.get ())
-    || Set.mem int_addr (AvoidAddresses.get ())
+    Virtual_address.Set.mem vaddr (Sse_utils.get_goal_addresses ())
+    || Virtual_address.Set.mem vaddr (Sse_utils.get_avoid_addresses ())
   in
   let root_addr = Dba_types.Caddress.of_virtual_address vaddr in
   if G.mem_vertex_a cfg root_addr = None then

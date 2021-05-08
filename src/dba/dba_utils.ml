@@ -207,6 +207,7 @@ let checksize_instruction binkd =
   | If(bcond, JInner _id1, _id2) ->
     valid_condition bcond
 
+  | Serialize _
   | Stop _ -> true
   | Print(l, _addr) ->
     let f = function Exp x -> ignore (computesize_dbaexpr x)

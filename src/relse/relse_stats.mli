@@ -18,9 +18,14 @@
 (*  for more details (enclosed in the file licenses/LGPLv2.1).            *)
 (*                                                                        *)
 (**************************************************************************)
-(** The exit codes *)
 type status = Insecure | Max_Depth | Max_Paths | Solver_Timeout | Timeout | EnumLimit
-type query_type = Exploration | Control_Insecurity | Memory_Insecurity | Insecurity | Model | Enum
+type query_type = Exploration | Control_Insecurity | Memory_Insecurity | Terminal_Insecurity | Insecurity | Model | Enum
+
+ (* Exit code *)
+val exit_secure : int
+val exit_error : int
+val exit_insecure : int
+val exit_unknown : int
 
 type t
 

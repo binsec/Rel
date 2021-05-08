@@ -35,15 +35,29 @@ module type INSECURITY_STATE = sig
 
   (** Creates a new empty insecurity state *)
   val initialize : Relse_path.Path_state.t -> (Relse_path.Path_state.t * t)
-    
+
+  (** [declare_input ?level lval name ps] Declares a variable [name]
+     with security level [level] and assigns the lvalue [lval := name]
+     in [ps] *)
+  val declare_input: ?level:Relse_utils.level -> Dba.LValue.t -> string -> Relse_path.Path_state.t -> t ->
+    Relse_smt.Path_state.t * t
+  
+  (** [declare_input_addr ?level addr name ps] Declares a variable
+     [name] with secuirty level [level] and stores it a address [addr]
+     in ps: [@[addr] := name] *)
+  val declare_input_addr: ?level:Relse_utils.level -> Dba.Expr.t -> string -> Relse_path.Path_state.t -> t ->
+    Relse_smt.Path_state.t * t
+  
   (** [eval instr ps t] add insecurity checks corresponding to
      instruction [instr] in constex [ps] and check insecurity queries
      if necessary. *)
   val eval : Relse_path.Path_state.t -> t -> (Relse_path.Path_state.t * t)
 
-  (** [force_check t] Performs a check to ensure that no insecurity
-     query is satisfiable *)
-  val force_check : ?qtype:Relse_stats.query_type -> Relse_path.Path_state.t -> t ->
+  (** [end_path qtype terminated ps t] Process the end of a path and
+     check all remaining insecurity queries. [terminated] indicates
+     that the end of the program has been reached (e.g. not just the
+     an aborted path). *)
+  val end_path : ?qtype:Relse_stats.query_type -> terminated:bool -> Relse_path.Path_state.t -> t ->
     (Relse_path.Path_state.t * t)
 end
 

@@ -40,6 +40,7 @@ let remove_goto m =
     | Dba.Instr.Assert (_, nid)
     | Dba.Instr.Malloc (_, _, nid)
     | Dba.Instr.Free (_, nid)
+    | Dba.Instr.Serialize (_, nid)
     | Dba.Instr.Nondet (_, _, nid) ->
       begin
         try
@@ -149,6 +150,7 @@ let remove_goto m =
       | Dba.Instr.Malloc (_, _, nid)
       | Dba.Instr.Free (_, nid)
       | Dba.Instr.Nondet (_, _, nid)
+      | Dba.Instr.Serialize (_, nid)
       | Dba.Instr.SJump (Dba.JInner nid, _) ->
         begin
           let accu = Caddress.Map.add addr (ik, opcode) accu in

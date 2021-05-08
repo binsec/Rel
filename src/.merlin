@@ -49,7 +49,7 @@ B backwards
 B utils
 B _build/**
 PKG ocamlgraph
-PKG ZMQ
+PKG zmq
 PKG llvm
 PKG zarith
 PKG oUnit

@@ -36,9 +36,10 @@ module State : sig
 
   (** [add_assert st h]  Add the assertion [h] to the state [st]*)
   val add_assertion : Formula.bl_term -> t -> t
-  
-  val declare_high : string -> Formula.sort -> t -> t
-  val declare_low  : string -> Formula.sort -> t -> t
+
+  (** [declare level name var_type t] declares a the variable [name]
+     with type [var_type] and security level [level] in state [t] *)
+  val declare : Relse_utils.level -> string -> Formula.sort -> t -> t
   
   (** [comment cmt st] Add the comment [cmt] to the current formula in [st] *)
   val comment : string -> t -> t

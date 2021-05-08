@@ -32,3 +32,11 @@ val dump_file : unit -> string
 
 val mk_var_name : string -> int -> string
 (** [mk_var_name basename idx] *)
+
+val get_goal_addresses: unit -> Virtual_address.Set.t
+(** Returns the set of virtual addresses to reach according to
+    [Sse_options.GoalAddresses] *)
+
+val get_avoid_addresses: unit -> Virtual_address.Set.t
+(** Returns the set of virtual addresses to avoid according to
+    [Sse_options.AvoidAddresses] *)

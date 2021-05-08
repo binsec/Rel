@@ -35,9 +35,9 @@ module SMT_dir : Cli.STRING_OPT
 
 module AddressTraceFile : Cli.STRING_OPT
 
-module AvoidAddresses : Cli.INTEGER_SET
+module AvoidAddresses : Cli.STRING_SET
 
-module GoalAddresses : Cli.INTEGER_SET
+module GoalAddresses : Cli.STRING_SET
 
 module LoadSections : Cli.STRING_SET
 

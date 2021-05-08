@@ -320,6 +320,9 @@ module Jump_target : sig
   val is_outer : 'a t -> bool
 end
 
+type serialize_type =
+  | SerializeMemory                      (* mfence *)
+
 module Instr : sig
   type t = private
     | Assign of LValue.t * Expr.t *  id
@@ -327,6 +330,7 @@ module Instr : sig
     | DJump of Expr.t * tag option
     | If of Expr.t * id jump_target * id
     | Stop of state option
+    | Serialize of serialize_type * id
     | Assert of Expr.t * id
     | Assume of Expr.t * id
     | NondetAssume of LValue.t list * Expr.t * id
@@ -357,6 +361,7 @@ module Instr : sig
   val assume  : Expr.t -> int -> t
   val non_deterministic_assume : LValue.t list -> Expr.t -> int -> t
   val stop : state option -> t
+  val serialize : serialize_type -> int -> t
 
   val print : printable list -> int -> t
 

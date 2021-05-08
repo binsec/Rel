@@ -28,7 +28,7 @@ include Targets.mk
 include ../Piqi.mk
 include ../Caml.mk
 
-all: $(EXE) unit-tests
+all: $(EXE)
 debug: $(EXE).byt
 unit-tests: test_runner
 	./test_runner

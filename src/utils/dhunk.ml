@@ -361,6 +361,7 @@ module Check = struct
       | Instr.SJump _
       | Instr.DJump _
       | Instr.Assign _
+      | Instr.Serialize _
       | Instr.Stop _
       | Instr.Assert _
       | Instr.Assume _

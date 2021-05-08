@@ -48,3 +48,17 @@ let dump_file = mk_file ~dir:Sse_options.SMT_log_directory.get ;;
 
 let mk_var_name basename idx =
   Format.sprintf "%s_%d" basename idx
+
+let string_to_vaddr sloc acc =
+  let img = Kernel_functions.get_img () in
+  match Loader_utils.Binary_loc.(to_virtual_address ~img (of_string sloc)) with
+  | Some vaddr -> Virtual_address.Set.add vaddr acc
+  | None -> Logger.fatal "Unable to parse the address %s" sloc
+
+let get_goal_addresses () =
+  Basic_types.String.Set.fold string_to_vaddr (GoalAddresses.get ())
+    Virtual_address.Set.empty
+
+let get_avoid_addresses () =
+  Basic_types.String.Set.fold string_to_vaddr (AvoidAddresses.get ())
+    Virtual_address.Set.empty

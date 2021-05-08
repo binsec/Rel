@@ -75,7 +75,8 @@ let make inst_map djumps_map =
     | Dba.Instr.Undef (_, off)
     | Dba.Instr.Malloc (_, _, off)
     | Dba.Instr.Free (_, off)
-    | Dba.Instr.Print (_, off) -> Caddress.Set.singleton (Caddress.reid addr off), true
+    | Dba.Instr.Print (_, off)
+    | Dba.Instr.Serialize (_, off) -> Caddress.Set.singleton (Caddress.reid addr off), true
   in
   let build_aux current_address (inst, opc) ast =
     let successors, closed_successors =
@@ -141,7 +142,8 @@ let build_sequences_map ast l0 dba_display =
         | Dba.Instr.Undef (_, off)
         | Dba.Instr.Malloc (_, _, off)
         | Dba.Instr.Free (_, off)
-        | Dba.Instr.Print (_, off) -> get_successors (Caddress.reid addr off )
+        | Dba.Instr.Print (_, off)
+        | Dba.Instr.Serialize (_, off) -> get_successors (Caddress.reid addr off )
     with Not_found -> Dba_types.Caddress.Set.empty
   in
 

@@ -75,6 +75,14 @@ module HighSymbols = Builder.String_set(
   end
   )
 
+(* module CriticalFunction = Builder.String(
+ *   struct
+ *     let name = "critical-func"
+ *     let doc = "Name of critical function for secret erasure."
+ *     let default = ""
+ *   end
+ *   ) *)
+
 module PrintModel = Builder.False(
   struct
     let name = "print-model"
@@ -176,16 +184,19 @@ module MemoryType =
 
 type property =
   | CT             (* Check for constant-time *)
+  | SecretErasure  (* Check for safe erasure *)
 
 module Property =
   Builder.Variant_choice_assoc(struct
       type t = property
       let name = "property"
       let doc = "Select the property ot check:\n" ^
-                "\t\t- ct: check constant-time\n"
+                "\t\t- ct: check constant-time\n" ^
+                "\t\t- secret-erasure: check secret erasure\n"
       let default = CT
       let assoc_map = [
-        "ct", CT;]
+        "ct", CT;
+        "secret-erasure", SecretErasure]
     end)
 
 type leak_info =

@@ -46,6 +46,7 @@ class type inplace_visitor_t = object
   method visit_remote_if : Dba.Expr.t -> Dba.address -> Dba.id -> unit
   method visit_restrict : Dba.Expr.t -> Dba.id -> Dba.id -> unit
   method visit_sjump : Dba.id Dba.jump_target -> Dba.tag option -> unit
+  method visit_serialize : Dba.serialize_type -> unit
   method visit_stop : Dba.state option -> unit
   method visit_store : Dba.size -> Machine.endianness -> Dba.Expr.t -> unit
   method visit_unary : Dba.Unary_op.t -> Dba.Expr.t -> unit

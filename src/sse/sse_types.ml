@@ -476,22 +476,20 @@ module G(W:WORKLIST) = struct
              extend_directive h (address g) g
             ) gs in
       add_actions gs;
-      let open Basic_types in
-      let add_action f int_set =
-        Int.Set.iter
-          (fun n ->
-             let vaddr = Virtual_address.create n in
+      let add_action f vaddr_set =
+        Virtual_address.Set.iter
+          (fun vaddr ->
              let d = f vaddr in
              extend_directive h vaddr d
-          ) int_set in
+          ) vaddr_set in
       add_action
         (fun vaddr ->
           incr todo;
           let loc = Loader_utils.Binary_loc.address vaddr in
-          Directive.reach loc) (GoalAddresses.get ());
+          Directive.reach loc) (Sse_utils.get_goal_addresses ());
       add_action (fun vaddr -> Directive.cut @@
-                                 Loader_utils.Binary_loc.address vaddr)
-        (AvoidAddresses.get ());
+                   Loader_utils.Binary_loc.address vaddr)
+        (Sse_utils.get_avoid_addresses ());
       { todo = !todo; store = h }
 
     module Enumeration = struct

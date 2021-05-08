@@ -32,11 +32,12 @@ and timeout =        0b01000
 and enum_limit =     0b10000
 
 (* Exit code *)
-let secure = 0
-and insecure = 7
-and unknown = 8
+let exit_secure = 0
+and exit_error = 1
+and exit_insecure = 7
+and exit_unknown = 8
 
-type query_type = Exploration | Control_Insecurity | Memory_Insecurity | Insecurity | Model | Enum
+type query_type = Exploration | Control_Insecurity | Memory_Insecurity | Terminal_Insecurity | Insecurity | Model | Enum
 
 type query_record = {
   total : int;
@@ -97,6 +98,7 @@ type t = {
   exploration_queries : query_record ref;
   control_insecurity_queries : query_record ref;
   memory_insecurity_queries : query_record ref;
+  terminal_insecurity_queries : query_record ref;
   insecurity_queries : query_record ref;
   model_queries : query_record ref;
   enum_queries : query_record ref;
@@ -126,6 +128,7 @@ let empty = {
   exploration_queries = ref empty_query_record;
   control_insecurity_queries = ref empty_query_record;
   memory_insecurity_queries = ref empty_query_record;
+  terminal_insecurity_queries = ref empty_query_record;
   insecurity_queries = ref empty_query_record;
   model_queries = ref empty_query_record;
   enum_queries = ref empty_query_record;
@@ -170,10 +173,10 @@ let get_insecurity_addresses () =
 
 let get_exit_code () =
   if !stat.nb_violations > 0
-  then insecure
+  then exit_insecure
   else if !stat.status = 0
-  then secure
-  else unknown
+  then exit_secure
+  else exit_unknown
 
 let get_status () =
   (if (!stat.status land max_depth) = 0 then "0" else "1") ^
@@ -183,8 +186,9 @@ let get_status () =
 
 let print_exit_code () =
   let exit_code = get_exit_code () in
-  if exit_code = secure then "Secure" else
-  if exit_code = insecure then "Insecure"
+  if exit_code = exit_secure then "Secure" else
+  if exit_code = exit_insecure then "Insecure" else
+  if exit_code = exit_error then "Error"
   else "Unknown"
 
 let print_status () =
@@ -249,6 +253,7 @@ let update_status result addr query_type =
   | Exploration -> update_exploration_query ()
   | Control_Insecurity -> update_insec_query ()
   | Memory_Insecurity -> update_insec_query ()
+  | Terminal_Insecurity -> update_insec_query ()
   | Insecurity -> update_insec_query ()
   | Model -> ()
   | Enum -> update_exploration_query ()
@@ -271,6 +276,9 @@ let add_query time result query_type =
     update_queries !stat.insecurity_queries
   | Memory_Insecurity ->
     update_queries !stat.memory_insecurity_queries;
+    update_queries !stat.insecurity_queries
+  | Terminal_Insecurity ->
+    update_queries !stat.terminal_insecurity_queries;
     update_queries !stat.insecurity_queries
   | Insecurity -> update_queries !stat.insecurity_queries
   | Model -> update_queries !stat.model_queries
@@ -324,6 +332,7 @@ let pp fmt stat =
   print_query_record fmt "Exploration queries" !(stat.exploration_queries); 
   print_query_record fmt "CF Insecurity queries" !(stat.control_insecurity_queries);
   print_query_record fmt "Mem Insecurity queries" !(stat.memory_insecurity_queries);
+  print_query_record fmt "Term Insecurity queries" !(stat.terminal_insecurity_queries);
   print_query_record fmt "Insecurity queries" !(stat.insecurity_queries);
   print_query_record fmt "Model queries" !(stat.model_queries);
   print_query_record fmt "Enum queries" !(stat.enum_queries);
@@ -358,6 +367,7 @@ let pp_csv ~with_header ~label ~fp ~dd ~untainting fmt stat =
                         total, Explor time, CF SAT, CF UNSAT, CF \
                         other, CF total, CF time, Mem SAT,Mem UNSAT, \
                         Mem other, Mem total, Mem time, Insec SAT, \
+                        Term other, Term total, Term time, Term SAT, \
                         Insec UNSAT, Insec other, Insec total, Insec \
                         time, Model total, Model time, Enum total, \
                         Enum time, Total SAT, Total UNSAT, Total \
@@ -372,6 +382,7 @@ let pp_csv ~with_header ~label ~fp ~dd ~untainting fmt stat =
   print_query_record_csv fmt !(stat.exploration_queries); 
   print_query_record_csv fmt !(stat.control_insecurity_queries);
   print_query_record_csv fmt !(stat.memory_insecurity_queries);
+  print_query_record_csv fmt !(stat.terminal_insecurity_queries);
   print_query_record_csv fmt !(stat.insecurity_queries);
   Format.fprintf fmt "%d,%f,%d,%f,"
   !(stat.model_queries).total

@@ -75,6 +75,7 @@ let get_redundant_assign (lhs_temp, addr) block =
         aux (Caddress.reid addr id) (Caddress.Map.add addr (ik, opc) acc)
       | Dba.Instr.SJump (Dba.JOuter _, _)
       | Dba.Instr.DJump (_, _)
+      | Dba.Instr.Serialize _ -> None, acc
       | Dba.Instr.Stop _ -> None, acc
   in
   aux addr Caddress.Map.empty
@@ -89,6 +90,7 @@ let is_not_mayused_in_block temp_lhs insts =
                (lhs_mayused_in_lhs temp_lhs lhs))
         | Dba.Instr.SJump (Dba.JInner _, _)
         | Dba.Instr.SJump (Dba.JOuter _, _)
+        | Dba.Instr.Serialize (_)
         | Dba.Instr.Stop (_) -> true
         | Dba.Instr.DJump (expr, _) -> not (lhs_mayused_in_expr temp_lhs expr)
         | Dba.Instr.If (c, _, _)
@@ -130,6 +132,7 @@ let nb_used_in_block temp_lhs insts =
           then nb + 1
           else nb
         | Dba.Instr.SJump ( _, _)
+        | Dba.Instr.Serialize _
         | Dba.Instr.Stop (_) -> nb
         | Dba.Instr.DJump (expr, _) -> if (lhs_mayused_in_expr temp_lhs expr) then nb + 1 else nb
         | Dba.Instr.If (c, _, _)
@@ -373,6 +376,7 @@ module Constant_propagation = struct
     | Dba.Instr.Print _
     | Dba.Instr.Undef _
     | Dba.Instr.Nondet _
+    | Dba.Instr.Serialize _
     | Dba.Instr.Stop _
     | Dba.Instr.SJump _ as instr -> instr
 
@@ -423,6 +427,7 @@ module Constant_propagation = struct
             | Dba.Instr.Print (_, id) -> loop env id
             | Dba.Instr.SJump (Dba.JOuter _, _)
             | Dba.Instr.DJump _
+            | Dba.Instr.Serialize _
             | Dba.Instr.Stop _ -> env
           end
       end

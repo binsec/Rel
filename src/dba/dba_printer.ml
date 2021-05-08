@@ -282,6 +282,9 @@ module Make(R:Renderer) : DbaPrinter = struct
     | `Stack -> fprintf ppf "stack"
     | `Malloc ((id, _), _) -> fprintf ppf "malloc%d" id
 
+  let pp_serialize_type ppf = function
+    | Dba.SerializeMemory -> fprintf ppf "memory (mfence)"
+
   let pp_instruction n ppf instruction =
     let suffix ppf id =
       match n with
@@ -309,6 +312,9 @@ module Make(R:Renderer) : DbaPrinter = struct
         pp_bl_term e pp_address addr int_addr
     | Dba.Instr.Stop state_opt ->
       fprintf ppf "%a" (pp_opt pp_state) state_opt
+    | Dba.Instr.Serialize (st, id) ->
+      fprintf ppf "%@serialize %a,%a" pp_serialize_type st
+        suffix id
     | Dba.Instr.Print (_, id) ->
       fprintf ppf
         "print \"message not displayed\"%a"

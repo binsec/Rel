@@ -236,6 +236,7 @@ and is_not_mayused_in_instr ik prog addr niter var flags_env :
     if (lhs_mayused_in_lhs var lhs) then flags_env, false
     else if (lhs_mustkilled_by_lhs var lhs) then flags_env, true
     else loop id
+  | Dba.Instr.Serialize _ -> flags_env, true  (* if not used then useless *)
   | Dba.Instr.Stop _ -> flags_env, true  (* if not used then useless *)
 
 

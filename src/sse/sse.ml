@@ -345,7 +345,8 @@ struct
       | Dba.Instr.NondetAssume _
       | Dba.Instr.Malloc _
       | Dba.Instr.Free _
-      | Dba.Instr.Print _ as dba_instruction ->
+      | Dba.Instr.Print _
+      | Dba.Instr.Serialize _ as dba_instruction ->
         let msg =
           Format.asprintf "%a" Dba_printer.Ascii.pp_instruction dba_instruction in
         Errors.not_yet_implemented msg

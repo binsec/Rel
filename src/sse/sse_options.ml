@@ -73,15 +73,14 @@ module AddressTraceFile = Builder.String_option(
   end
   )
 
-module AvoidAddresses = Builder.Integer_set(
+module AvoidAddresses = Builder.String_set(
   struct
     let name = "no-explore"
     let doc = "set addresses where sse should stop"
   end
   )
 
-
-module GoalAddresses = Builder.Integer_set(
+module GoalAddresses = Builder.String_set(
   struct
     let name = "explore"
     let doc = "set addresses where sse should try to go"

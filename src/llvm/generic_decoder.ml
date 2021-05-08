@@ -203,6 +203,7 @@ end
       let (v,state) = S.undef ~size state in
       let state = write_lhs state v lhs in
       (JKJump (Static (JInner id)),state)
+    | Serialize _ -> assert false
     | Malloc _ -> assert false
     | Free _ -> assert false
     | Print _ -> assert false

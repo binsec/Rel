@@ -753,8 +753,11 @@ let read_2bytes_opcode mode address_mode rep lr =
   | 0xae ->
     (* FIXME: detail all mnemonics *)
     let _, spare = read_modrm address_mode lr in
-    let msg = Printf.sprintf "0x0f ae %i" spare in
-    unsupported msg
+    begin match spare with
+      | 6 -> Mfence
+      | _ -> let msg = Printf.sprintf "0x0f ae %i" spare in
+        unsupported msg
+    end
 
   | 0xaf ->
     let src, spare = read_modrm address_mode lr in

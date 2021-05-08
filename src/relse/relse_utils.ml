@@ -21,6 +21,16 @@
 
 open Relse_options
 
+type level = Low | High
+
+let level_to_string = function
+  | Low -> "low"
+  | High -> "high"
+
+let level_to_char = function
+  | Low -> 'l'
+  | High -> 'h'
+
 type assignment_t =
   | Var of string * Size.Bit.t * Rel_expr.rel_bv (* name, value *)
   | Mem of Dba.size * Rel_expr.rel_bv * Rel_expr.rel_bv (* size, index, value *)
@@ -36,6 +46,11 @@ let dba_constant_from_int n =
   Dba_utils.Expr.constant_from_int
     ~size:(word_size_bits () |> Size.Bit.to_int )
     ~value:n
+
+let get_stack_register () =
+  let register_name = Kernel_options.Machine.stack_register () in
+  let size = Kernel_options.Machine.word_size () in
+  Dba.Expr.var ~tag:Dba.VarTag.register register_name size
 
 let is_loadable addr =
   let loader = Kernel_functions.get_img () in

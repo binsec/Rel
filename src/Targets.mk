@@ -66,8 +66,8 @@ $(eval $(call defcunit,utils,\
 	cfg \
 	dhunk \
 	instruction \
-	network_io \
-	instParsing,,CEA))
+	network_io,,CEA))
+# instParsing
 
 
 ##
@@ -110,8 +110,9 @@ DIRS += $(PIQI_DIR) # PIQI_DIR is defined elsewhere
 # Parsers
 ##
 $(eval $(call defcunit_parser,parser,parse_utils,,infos parse_helpers,\
-	dbacsl_parser parser parser_infos policy_parser SMTParserWp,\
-	dbacsl_token lexer lexer_infos policy_token SMTLexerWp,CEA))
+	dbacsl_parser parser parser_infos SMTParserWp,\
+	dbacsl_token lexer lexer_infos SMTLexerWp,CEA))
+# policy_parser policy_token
 
 ##
 # SMT
@@ -178,39 +179,40 @@ $(eval $(call defcunit,ida,\
 	ida_cg \
 	ida,,CEA))
 
-$(eval $(call defcunit,static,pmap static_types static_utils,,CEA))
+# $(eval $(call defcunit,static,pmap static_types static_utils,,CEA))
 
-$(eval $(call defcunit,static/simulation,\
-	simulate_utils \
-	concrete_state concrete_eval \
-	simulate,,CEA))
+# $(eval $(call defcunit,static/simulation,\
+# 	simulate_utils \
+# 	concrete_state concrete_eval \
+# 	simulate,,CEA))
 
-$(eval $(call defcunit,static/interpreter,simulation concrete,,CEA))
+# $(eval $(call defcunit,static/interpreter,simulation concrete,,CEA))
 
-$(eval $(call defcunit,static/ai/base,ai_options normalize_instructions,,CEA))
+# $(eval $(call defcunit,static/ai/base,ai_options normalize_instructions,,CEA))
 
-$(eval $(call defcunit,static/ai/domains,\
-	domain_common domain_interval range kset union_find taint,,CEA))
+# $(eval $(call defcunit,static/ai/domains,\
+# 	domain_common domain_interval range kset union_find taint,,CEA))
 
-$(eval $(call defcunit,static/ai,\
-	display ai_utils \
-	backward_analysis \
-	normalize_predicate high_level_predicate \
-	reduced_product nonrelational \
-	ai_results \
-	ai,ai_sigs,CEA))
+# $(eval $(call defcunit,static/ai,\
+# 	display ai_utils \
+# 	backward_analysis \
+# 	normalize_predicate high_level_predicate \
+# 	reduced_product nonrelational \
+# 	ai_results \
+# 	ai,ai_sigs,CEA))
 
 $(eval $(call defcunit,sse,\
 	sse_options \
-	sse_symbolic sse_graph \
+	sse_symbolic \
+	sse_utils \
+	sse_graph \
 	sse_prune \
-	sse_types sse_utils \
+	sse_types \
 	sse_smt \
 	sse,,CEA))
 
 $(eval $(call defcunit,relse,\
 	relse_options \
-	relse_graph \
   rel_expr \
   relse_utils \
 	relse_stats \
@@ -229,21 +231,21 @@ $(eval $(call defcunit,xtrasec,\
 
 $(eval $(call defcunit,binpatcher,binpatcher_options binpatcher,,CEA))
 
-$(eval $(call defcunit,dynamic/base,\
-	trace_config trace_options trace_type \
-	fdInput \
-	dse_options \
-	path_predicate_env \
-	path_predicate_optim path_predicate_formula \
-	path_predicate_utils,,CEA))
+# $(eval $(call defcunit,dynamic/base,\
+# 	trace_config trace_options trace_type \
+# 	fdInput \
+# 	dse_options \
+# 	path_predicate_env \
+# 	path_predicate_optim path_predicate_formula \
+# 	path_predicate_utils,,CEA))
 
-DYNAMIC_DIR = dynamic
-DDSE_DIR = $(DYNAMIC_DIR)/dse
+# DYNAMIC_DIR = dynamic
+# DDSE_DIR = $(DYNAMIC_DIR)/dse
 
-$(eval $(call defcunit,$(DDSE_DIR)/libcall_stubs,\
-	libcall_utils \
-	windows_stubs \
-	call_convention libc_stubs libcall_stubs,libcall_types,CEA))
+# $(eval $(call defcunit,$(DDSE_DIR)/libcall_stubs,\
+# 	libcall_utils \
+# 	windows_stubs \
+# 	call_convention libc_stubs libcall_stubs,libcall_types,CEA))
 
 # DDSE_LIBCALL_SRC_FILES_CEA_IMAG = libc_stubs libcall_stubs
 # DDSE_LIBCALL_SRC_FILES_CEA = \
@@ -254,35 +256,35 @@ $(eval $(call defcunit,$(DDSE_DIR)/libcall_stubs,\
 ##
 # TRACE
 ##
-$(eval $(call defcunit,$(DYNAMIC_DIR)/trace,trace_postprocessing trace_loader,,CEA))
+# $(eval $(call defcunit,$(DYNAMIC_DIR)/trace,trace_postprocessing trace_loader,,CEA))
 
-$(eval $(call defcunit,$(DDSE_DIR)/syscall_stubs,syscall_stubs,,CEA))
+# $(eval $(call defcunit,$(DDSE_DIR)/syscall_stubs,syscall_stubs,,CEA))
 
-$(eval $(call defcunit,$(DDSE_DIR)/instruction_stubs,instruction_stubs,,CEA))
+# $(eval $(call defcunit,$(DDSE_DIR)/instruction_stubs,instruction_stubs,,CEA))
 
-$(eval $(call defcunit,$(DDSE_DIR)/tainting,taint_types tainting,,CEA))
+# $(eval $(call defcunit,$(DDSE_DIR)/tainting,taint_types tainting,,CEA))
 
-$(eval $(call defcunit,$(DDSE_DIR),policy_utils policy_engine path_predicate,\
-	policy_type,CEA))
+# $(eval $(call defcunit,$(DDSE_DIR),policy_utils policy_engine path_predicate,\
+# 	policy_type,CEA))
 
-$(eval $(call defcunit,$(DDSE_DIR)/path_exploration,\
-	dseException \
-	tracesToTree exploration_type\
-	conf_exploration historyAsTree \
-	symbolicInput \
-	inputFromFiles \
-	invertChild check_trace traceAsFile \
-	eipRewrite guideAsRandom uaf_detection \
-	Parsing_gueb \
-	criteriaAsDefault criteriaEIPRewrite criteriaAsUAF \
-	guideAsBFS guideAsDFS \
-	guideAsUAF guideAsStrcmp \
-	dse,\
-	typeCriteriaDSE typeGuideDSE typeHistoryDSE typeTraceDSE \
-	guideAsPriority guideAsShortestPath,IMAG))
+# $(eval $(call defcunit,$(DDSE_DIR)/path_exploration,\
+# 	dseException \
+# 	tracesToTree exploration_type\
+# 	conf_exploration historyAsTree \
+# 	symbolicInput \
+# 	inputFromFiles \
+# 	invertChild check_trace traceAsFile \
+# 	eipRewrite guideAsRandom uaf_detection \
+# 	Parsing_gueb \
+# 	criteriaAsDefault criteriaEIPRewrite criteriaAsUAF \
+# 	guideAsBFS guideAsDFS \
+# 	guideAsUAF guideAsStrcmp \
+# 	dse,\
+# 	typeCriteriaDSE typeGuideDSE typeHistoryDSE typeTraceDSE \
+# 	guideAsPriority guideAsShortestPath,IMAG))
 
-$(eval, $(call defcunit,$(DDSE_DIR)/examples,\
-	call_ret generic_analyse opaque_predicate,,CEA))
+# $(eval, $(call defcunit,$(DDSE_DIR)/examples,\
+# 	call_ret generic_analyse opaque_predicate,,CEA))
 
 ##
 # Tests
@@ -298,18 +300,18 @@ TESTS_MLI_FILES=$(addsuffix .mli, $(TESTS_FILES))
 ##
 
 
-$(eval $(call defcunit,$(DYNAMIC_DIR)/examples,\
-	flareon sploit1 \
-	stat_analysis switch branch_coverage \
-	summary_analysis,,CEA))
+# $(eval $(call defcunit,$(DYNAMIC_DIR)/examples,\
+# 	flareon sploit1 \
+# 	stat_analysis switch branch_coverage \
+# 	summary_analysis,,CEA))
 
-$(eval $(call defcunit,$(DYNAMIC_DIR),server_options drun,,CEA))
+# $(eval $(call defcunit,$(DYNAMIC_DIR),server_options drun,,CEA))
 
-$(eval $(call defcunit,server,dba_io server_callback server,,CEA))
+# $(eval $(call defcunit,server,dba_io server_callback server,,CEA))
 
-$(eval $(call defcunit,examples/mcount,\
-	mcount_options mcount_main,\
-	,CEA))
+# $(eval $(call defcunit,examples/mcount,\
+# 	mcount_options mcount_main,\
+# 	,CEA))
 
 
 # Some targets to debug stuff
@@ -343,11 +345,12 @@ inspect: mlifiles mlfiles dirs dist generated
 
 # Other misc root files
 
-MAIN_ML_FILES = test.ml main.ml
+MAIN_ML_FILES = main.ml
+# test.ml
 
 BINSEC_LICENSE_CEA += \
 	$(ROOT_MLI_FILES) \
-	$(ROOT_ML_FILES) $(MAIN_ML_FILES) test.mli
+	$(ROOT_ML_FILES) $(MAIN_ML_FILES) # test.mli
 
 BINSEC_DISTRIB_FILES += $(ROOT_ML_FILES) $(MAIN_ML_FILES)
 
@@ -363,8 +366,8 @@ ML_FILES = \
 	$(MAIN_ML_FILES)
 
 MLI_FILES = \
-	$(LIB_MLI_FILES) \
-	test.mli
+	$(LIB_MLI_FILES)
+# test.mli
 
 
 LIB_CMO_FILES = $(LIB_ML_FILES:%.ml=%.cmo)

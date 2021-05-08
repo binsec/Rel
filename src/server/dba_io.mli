@@ -19,7 +19,7 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** Parsing/Serializing DBA from/to DBA piqi data structure *)
+(** Parsing/Serialize DBA from/to DBA piqi data structure *)
 
 (** convert a list of dbainstr to a list DBA in the Piqi format *)
 val generate_dbalist :

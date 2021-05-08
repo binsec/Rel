@@ -1,23 +1,3 @@
-(**************************************************************************)
-(*  This file is part of BINSEC.                                          *)
-(*                                                                        *)
-(*  Copyright (C) 2016-2019                                               *)
-(*    CEA (Commissariat à l'énergie atomique et aux énergies              *)
-(*         alternatives)                                                  *)
-(*                                                                        *)
-(*  you can redistribute it and/or modify it under the terms of the GNU   *)
-(*  Lesser General Public License as published by the Free Software       *)
-(*  Foundation, version 2.1.                                              *)
-(*                                                                        *)
-(*  It is distributed in the hope that it will be useful,                 *)
-(*  but WITHOUT ANY WARRANTY; without even the implied warranty of        *)
-(*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *)
-(*  GNU Lesser General Public License for more details.                   *)
-(*                                                                        *)
-(*  See the GNU Lesser General Public License version 2.1                 *)
-(*  for more details (enclosed in the file licenses/LGPLv2.1).            *)
-(*                                                                        *)
-(**************************************************************************)
 type 'a t = Rel of 'a * 'a | Simple of 'a
 type proj_t = Left | Right | Value
 
@@ -139,14 +119,8 @@ let hash f r_expr =
   | Rel (e1, e2) -> Hashtbl.hash (f e1, f e2) 
   | Simple e -> f e
 
+(* Hash table *)
 module RelHashtbl(H : Hashtbl.HashedType) = Hashtbl.Make
-    (struct
-      type t = H.t r_expr_t
-      let equal bv1 bv2 = equal H.equal bv1 bv2
-      let hash bv = hash H.hash bv
-    end)
-
-module RelHashamt(H : Hashtbl.HashedType) = Hashamt.Make
     (struct
       type t = H.t r_expr_t
       let equal bv1 bv2 = equal H.equal bv1 bv2
@@ -159,6 +133,30 @@ module RelBvTermHashtbl = RelHashtbl(struct
     let equal bv1 bv2 = bv1 = bv2
     let hash bv = bv.bv_term_hash
   end)
+
+
+(* (\* Map *\)
+ * module RelMap(Ord : Map.OrderedType) = Map.Make
+ *     (struct
+ *       type t = Ord.t r_expr_t
+ *       let compare bv1 bv2 = compare Ord.compare bv1 bv2
+ *     end)
+ * 
+ * module RelBvTermHashamt = RelHashamt(struct
+ *     open Formula
+ *     type t = bv_term
+ *     let compare bv1 bv2 = compare bv1  bv2
+ *     let hash bv = bv.bv_term_hash
+ *   end) *)
+
+
+(* Hashamt *)
+module RelHashamt(H : Hashtbl.HashedType) = Hashamt.Make
+    (struct
+      type t = H.t r_expr_t
+      let equal bv1 bv2 = equal H.equal bv1 bv2
+      let hash bv = hash H.hash bv
+    end)
 
 module RelBvTermHashamt = RelHashamt(struct
     open Formula

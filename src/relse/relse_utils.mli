@@ -18,6 +18,10 @@
 (*  for more details (enclosed in the file licenses/LGPLv2.1).            *)
 (*                                                                        *)
 (**************************************************************************)
+type level = Low | High
+val level_to_string : level -> string
+val level_to_char : level -> char
+
 type assignment_t =
   | Var of string * Size.Bit.t * Rel_expr.rel_bv (* name, value *)
   | Mem of Dba.size * Rel_expr.rel_bv * Rel_expr.rel_bv (* size, index, value *)
@@ -26,6 +30,8 @@ val word_size_bits : unit -> Size.Bit.t      (* 32 bits *)
 val word_size_bytes : unit -> Size.Byte.t      (* 32 bits *)
 
 val is_sse : unit -> bool
+
+val get_stack_register: unit -> Dba.Expr.t
 
 val get_main_symbol: unit -> Loader.Symbol.t
 

@@ -45,13 +45,13 @@ module Solver = struct
     Formula_transformation.optimize ~keep ?lst ~cst ~itv ~prn ~rbs ~row ~ssa fm
 
   let mk_comment qtype =
-    let open Relse_stats in
     match qtype with
-    | Exploration -> "Exploration query"
-    | Control_Insecurity -> "Insecurity (CF) query"
-    | Memory_Insecurity -> "Insecurity (MEM) query"
-    | Insecurity -> "Insecurity query"
-    | Model -> "Model query"
+    | Relse_stats.Exploration -> "Exploration query"
+    | Relse_stats.Control_Insecurity -> "Insecurity (CF) query"
+    | Relse_stats.Memory_Insecurity -> "Insecurity (MEM) query"
+    | Relse_stats.Terminal_Insecurity -> "Insecurity (Term) query"
+    | Relse_stats.Insecurity -> "Insecurity query"
+    | Relse_stats.Model -> "Model query"
     | Relse_stats.Enum -> "Enumeration query"
   
   let prepare_solver_in_state ?keep ps assertions solver qtype =

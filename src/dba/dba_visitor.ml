@@ -46,6 +46,7 @@ class type inplace_visitor_t = object
   method visit_remote_if : Dba.Expr.t -> Dba.address -> Dba.id -> unit
   method visit_restrict : Dba.Expr.t -> Dba.id -> Dba.id -> unit
   method visit_sjump : Dba.id Dba.jump_target -> Dba.tag option -> unit
+  method visit_serialize : Dba.serialize_type -> unit
   method visit_stop : Dba.state option -> unit
   method visit_store : Dba.size -> Machine.endianness -> Dba.Expr.t -> unit
   method visit_unary : Dba.Unary_op.t -> Dba.Expr.t -> unit
@@ -104,6 +105,7 @@ class dba_inplace_visitor : inplace_visitor_t = (* Visitor to visit an smt expre
           | Dba.JInner off1 -> self#visit_local_if cond off1 off2
           | Dba.JOuter addr -> self#visit_remote_if cond addr off2
         end
+      | Dba.Instr.Serialize (st, _) -> self#visit_serialize st
       | Dba.Instr.Stop opts -> self#visit_stop opts
       | Dba.Instr.Print(_, _) -> ()
       | Dba.Instr.NondetAssume (l, cond, _) -> self#visit_nondet_assume l cond; List.iter self#visit_lhs l;
@@ -151,6 +153,8 @@ class dba_inplace_visitor : inplace_visitor_t = (* Visitor to visit an smt expre
     method visit_local_if _ (_off1:Dba.id) (_off2:Dba.id) : unit = ()
 
     method visit_remote_if _ (_addr:Dba.address) (_off2:Dba.id) : unit = ()
+
+    method visit_serialize _serialize_type = ()
 
     method visit_stop _state_option = ()
 

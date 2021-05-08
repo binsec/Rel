@@ -27,21 +27,21 @@ let is_cond_jump inst =
   List.exists (fun x ->
       match Dba_types.Statement.instruction x with
       | If (_, JOuter _ ,_) -> true
-      | Assign (_, _, _)|SJump (_, _)|Stop _|Assert (_, _) | DJump (_, _)
+      | Assign (_, _, _)|SJump (_, _)|Stop _|Assert (_, _) |Serialize _ | DJump (_, _)
       | Nondet (_, _, _)|Undef (_, _)|Malloc (_, _, _) |Free (_, _)|Print (_, _)
       | Assume (_, _)|NondetAssume (_, _, _) | _ -> false) inst.dbainstrs
 
 let is_dyn_jump inst =
   List.exists (fun x -> match  Dba_types.Statement.instruction x  with
       | DJump _ -> true
-      | Assign (_, _, _)|SJump (_, _)|Stop _|Assert (_, _) | If (_, _, _)
+      | Assign (_, _, _)|SJump (_, _)|Stop _|Assert (_, _) |Serialize _ | If (_, _, _)
       | Nondet (_, _, _)|Undef (_, _)|Malloc (_, _, _) |Free (_, _)|Print (_, _)
       | Assume (_, _)|NondetAssume (_, _, _) -> false) inst.dbainstrs
 
 let _is_cond_or_dyn_jump inst =
   List.exists (fun x -> match  Dba_types.Statement.instruction x with
       | If _  | DJump _ -> true
-      | Assign (_, _, _)|SJump (_, _)|Stop _|Assert (_, _)
+      | Assign (_, _, _)|SJump (_, _)|Serialize _ | Stop _|Assert (_, _)
       | Nondet (_, _, _)|Undef (_, _)|Malloc (_, _, _) |Free (_, _)|Print (_, _)
       | Assume (_, _)|NondetAssume (_, _, _) -> false) inst.dbainstrs
 

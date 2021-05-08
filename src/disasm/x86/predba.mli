@@ -30,6 +30,7 @@ type 'a t = private
   | Undef of Dba.LValue.t
   | Nondet of Dba.LValue.t * Dba.region
   | Stop of Dba.state
+  | Serialize of Dba.serialize_type
 
 val assign : Dba.LValue.t -> Dba.Expr.t -> 'a t
 val (<<-) : Dba.LValue.t -> Dba.Expr.t -> 'a t
@@ -45,6 +46,8 @@ val conditional_jump : Dba.Expr.t -> 'a Dba.jump_target -> 'a t
 val undefined : Dba.LValue.t -> 'a t
 
 val non_deterministic : Dba.LValue.t -> Dba.region -> 'a t
+
+val serialize : Dba.serialize_type -> 'a t
 
 val stop : Dba.state -> 'a t
 

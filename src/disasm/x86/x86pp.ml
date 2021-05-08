@@ -165,6 +165,7 @@ let pp_instr instr ppf rep =
   | CMovcc (mode, cc, dst, src) ->
     let pp_genop = pp_genop32 mode in
     fprintf ppf "@[cmov%a@ %a,@ %a@]" pp_cc cc pp_genop dst pp_genop src
+  | Mfence -> fprintf ppf "@[mfence@]"
   | Movaps (_, dst, src) ->
     fprintf ppf "@[mov@ %a,@ %a@]" pp_genop_xmm dst pp_genop_xmm src
   | MovQ _ -> fprintf ppf "@[movq .. @]"

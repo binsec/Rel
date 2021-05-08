@@ -37,6 +37,8 @@ module type SSE_RUNNER = sig val start: unit -> unit end
 
 module Env_make(IS:Relse_insecurity.INSECURITY_STATE): SSE_RUNNER =
 struct 
+  module Stubs = Relse_stubs.Make(IS)
+
   module State  = struct
     type t = {
       path : Path_state.t;
@@ -104,6 +106,8 @@ struct
 
     (* let set_insecurity state insecurity = { state with insecurity } *)
 
+    let set _ path insecurity = { path; insecurity }    
+
     let on_path f state =
       { state with path = (f state.path) }
 
@@ -118,7 +122,7 @@ struct
   module State_stack = Fstack.Make(State)
 
   module Env = struct
-
+    
     type t = {
       (* The stack of states to explore *)
       worklist : State_stack.t;
@@ -130,13 +134,13 @@ struct
       paths : int;
 
       (* The stub context which contains all the stub informations *)
-      stub_ctx: Relse_stubs.t;
+      stub_ctx: Stubs.t;
     }
 
     let empty = 
       let worklist = State_stack.empty in
       let initial_state = None in
-      let stub_ctx = Relse_stubs.empty in      
+      let stub_ctx = Stubs.empty in      
       { worklist; current_state=initial_state; paths=0; stub_ctx; }
 
     (* Current environment *)
@@ -146,7 +150,7 @@ struct
     let initialize_env ~entrypoint =
       let initial_state = State.make_initial_state ~entrypoint in
       let worklist = State_stack.singleton initial_state in
-      let stub_ctx = Relse_stubs.init () in
+      let stub_ctx = Stubs.init () in
       env := { empty with worklist; stub_ctx }
 
     (* Chose a new path from then environment *)
@@ -190,7 +194,7 @@ struct
     let set_current_path_state ps =
       let current_state = current_state () in
       set_current_state (State.set_path current_state ps)
-
+    
     (* (\** Get the current path state *\)
      * let get_current_path_state () =
      *   State.path (current_state ()) *)
@@ -199,31 +203,41 @@ struct
   module Terminator = struct
     type t = {
       end_path   : Path_state.t -> bool;
+      abort_path   : Path_state.t -> bool;
       end_search : Path_state.t -> bool;
     }
 
-    let create ~end_path ~end_search () =
-      { end_path; end_search }
+    let create ~end_path ~abort_path ~end_search () =
+      { end_path; abort_path; end_search }
 
     let dfs ~goals ~avoids =
       let in_set st = Virtual_address.Set.mem (Path_state.virtual_address st) in
-      let end_path =
-        (fun st ->
-           if in_set st avoids
-           then (Logger.debug ~level:2 "[Exploration] End of path : to be avoided"; true)
-           else if Sse_options.MaxDepth.get () > 0 &&
-                   Path_state.depth st >= Sse_options.MaxDepth.get ()
-           then
-             begin
-               Relse_stats.(set_status Max_Depth);
-               Logger.warning "[Exploration] Max depth exceeded (%d)" (Path_state.depth st);
-               true
-             end
-           else false)
+      let end_path st =
+        if in_set st avoids then
+          (* Found location to avoid *)
+          (Logger.debug ~level:2 "[Exploration] End of path: location to avoid"; true)
+        else false
+      and abort_path st = 
+        if Sse_options.MaxDepth.get () > 0 &&
+           Path_state.depth st >= Sse_options.MaxDepth.get ()
+        then
+          (* Max depth reached *)
+          begin
+            Relse_stats.(set_status Max_Depth);
+            Logger.warning "[Exploration] Max depth exceeded (%d)" (Path_state.depth st);
+            true
+          end
+        else false
       and end_search st = in_set st goals in
-      create ~end_search ~end_path ()
+      create ~end_search ~abort_path ~end_path ()
   end
 
+  (** End the RelSE *)
+  let end_relse msg =
+    Logger.result msg;
+    Relse_stats.print_stats ();
+    exit (Relse_stats.get_exit_code ())
+  
   (** Terminates the current path *)
   let end_path () =
     Env.incr_paths ();
@@ -231,27 +245,7 @@ struct
     let path_number = Env.get_nb_paths () in
     Logger.debug ~level:4 "[Exploration] Path %d explored." path_number;
     Path_state.pp_path (State.path state) path_number;
-    Relse_stats.add_path ()
-
-  (** End the RelSE *)
-  let end_relse msg =
-    Logger.result msg;
-    Relse_stats.print_stats ();
-    exit (Relse_stats.get_exit_code ())
-
-  (** Terminates the current path and the RelSE *)
-  let end_path_and_relse msg =
-    end_path () |> ignore;
-    end_relse msg
-
-  (* Check the remaining insecurity queries *)
-  let end_path_and_check () =
-    end_path ();
-    let state = Env.current_state () in
-    (* Check remaining insecurity queries *)
-    ignore (IS.force_check
-              (State.path state)
-              (State.insecurity state));
+    Relse_stats.add_path ();
     if Relse_options.MaxPaths.get () > 0 &&
        Env.get_nb_paths () >= Relse_options.MaxPaths.get ()
     then
@@ -260,22 +254,37 @@ struct
         end_relse "Maximum number of paths reached."
       end
 
-  let get_avoid_address () =
-    let addresses = Sse_options.AvoidAddresses.get () in
+  
+  (** Terminates the current path and the RelSE *)
+  let end_path_and_relse msg =
+    end_path () |> ignore;
+    end_relse msg
 
+  
+  (** Check the remaining insecurity queries before ending the path *)
+  let check_and_end_path ~terminated () =
+    end_path ();
+    let state = Env.current_state () in
+    (* Check remaining insecurity queries *)
+    ignore (IS.end_path ~terminated
+              (State.path state)
+              (State.insecurity state))
+  
+
+  let get_avoid_address () =
+    let addresses = Sse_utils.get_avoid_addresses () in
     let add_function_end func_name addresses =
       let img = Kernel_functions.get_img () in
       let _, end_fun = Loader_utils.symbol_by_name ~name:func_name img 
                        |> Utils.unsafe_get_opt
                        |> Loader_utils.symbol_interval in
       let end_fun = (Virtual_address.pred end_fun) in
-      Logger.debug ~level:2 "[Initialization] Adding end of %s at %a to avoids."
+      Logger.debug ~level:6 "[Initialization] Adding end of %s at %a to avoids."
         func_name Virtual_address.pp end_fun;
-      Basic_types.Int.Set.add (Virtual_address.to_int end_fun) addresses
+      Virtual_address.Set.add end_fun addresses
     in
-
-    (* If entrypoint is a function, add ret from function as avoid address *)
-    let addresses =
+    let addresses = 
+      (* If entrypoint is a function, add ret from function as avoid address *)
       match Kernel_options.Entry_point.get_opt () with
       | None -> add_function_end "main" addresses (* Means we start from main *)
       | Some s ->
@@ -284,11 +293,7 @@ struct
           add_function_end func_name addresses
         | _ -> addresses
     in
-    let pp_address addr =
-      Logger.debug ~level:2 "[Initialization] Avoids %a"
-        Virtual_address.pp (Virtual_address.create addr)
-    in
-    Basic_types.Int.Set.iter pp_address addresses;
+    Logger.debug ~level:2 "[Initialization] Avoids %a" Virtual_address.pp_set addresses;
     addresses
 
 
@@ -441,21 +446,22 @@ struct
     let eval () =
       let state = State.on_path maybe_add_comment (Env.current_state ()) in
       let ps = State.path state in
+      let is = State.insecurity state in
       Logger.debug ~level:5 "@[Evaluating@ %a@]" Path_state.pp_loc ps;
 
       (* Check for stubs *)
-      match Relse_stubs.check (Env.stub_ctx ()) ps with
-      | Relse_stubs.Halt ->
-        end_path_and_check (); choose_next_state ()
-      | Relse_stubs.Skip ps ->
-        Env.set_current_state (State.set_path state ps)
-      | Relse_stubs.Continue ps ->
-        Env.set_current_state (State.set_path state ps);      
+      match Stubs.check (Env.stub_ctx ()) ps is with
+      | Stubs.Terminated ->
+        check_and_end_path ~terminated:true (); choose_next_state ()
+      | Stubs.Skip (ps,is) ->
+        Env.set_current_state (State.set state ps is)
+      | Stubs.Continue (ps,is) ->
+        Env.set_current_state (State.set state ps is);      
         let dba_instr = Path_state.get_dba_instruction ps in
 
         (* Gather (and possibly verifies) the insecurity checks at the
            current instruction *)
-        let state = State.update_state (IS.eval) state in
+        let state = State.update_state IS.eval state in
         Env.set_current_state state;
         
         (* Evaluate the instruction
@@ -468,8 +474,7 @@ struct
           Env.set_current_state state;
 
         | Dba.Instr.SJump (jump_target, _) ->
-          let state = state
-                      |> static_jump ~jump_target in
+          let state = static_jump ~jump_target state in
           Env.set_current_state state;
 
         | Dba.Instr.If (condition, jump_target, local_target) ->
@@ -480,13 +485,13 @@ struct
 
         | Dba.Instr.Stop (Some Dba.KO) ->
           (* Discard current path, choose a new one *) 
-          end_path_and_check (); choose_next_state ()
+          check_and_end_path ~terminated:true (); choose_next_state ()
 
+        (* Nop instructions *)
+        | Dba.Instr.Serialize (_, idx)
         | Dba.Instr.Undef (_, idx) as instruction ->
-          (* Instruction [lval := undef] -> Ignores the instruction *)
-	        let state = state
-	                    |> State.on_path (skip instruction idx) in
-	        Env.set_current_state state
+	        let state = State.on_path (skip instruction idx) state in
+	        Env.set_current_state state;
 
         | Dba.Instr.Stop _
         | Dba.Instr.Assert _
@@ -514,18 +519,25 @@ struct
       (* Reached the goal (and the end of the path) *)  
       if p.end_search ps then
         begin
-          end_path_and_check ();
+          check_and_end_path ~terminated:true ();
           halt state
         end
         (* Reached the end of the path *)
       else if p.end_path ps then
         begin
-          end_path_and_check ();
+          check_and_end_path ~terminated:true ();
           choose_next_state ();
           loop_aux ()
         end
-        (* Continue along this path *)
+        (* Path aborted *)
+      else if p.end_path ps then
+        begin
+          check_and_end_path ~terminated:false ();
+          choose_next_state ();
+          loop_aux ()
+        end
       else
+        (* Continue along this path *)
         begin
           Eval.eval ();
           loop_aux ()
@@ -534,7 +546,7 @@ struct
     choose_next_state (); loop_aux ()
 
 
-  (** Halts the relationalSE along a path and returns a model.
+  (** Halts RelSE along a path and returns a model.
       - Generate a output file with the stats,  *)
   let halt state =
     let ps = State.path state in
@@ -550,16 +562,10 @@ struct
     let entrypoint = get_entry_point () in
     Logger.debug ~level:2 "[Initialization] Starting from %a" Virtual_address.pp
       entrypoint;
-    let ints_to_vaddresses iset =
-      Basic_types.Int.Set.fold
-        (fun i vset -> Virtual_address.(Set.add (create i) vset))
-        iset
-        Virtual_address.Set.empty
-    in
     let p =
       Terminator.dfs
-        ~goals:(Sse_options.GoalAddresses.get () |> ints_to_vaddresses)
-        ~avoids:(get_avoid_address () |> ints_to_vaddresses) in
+        ~goals:(Sse_utils.get_goal_addresses ())
+        ~avoids:(get_avoid_address ()) in
     Env.initialize_env ~entrypoint;
     loop_until ~p ~halt
 
@@ -588,6 +594,7 @@ let run () =
   if Relse_options.is_enabled () && Kernel_options.ExecFile.is_set () then
     let (module IS) = Relse_insecurity.init () in
     let module S = Env_make(IS) in S.start ()
-
+  else
+    exit Relse_stats.exit_error
 let _ =
   Cli.Boot.enlist ~name:"RelSE" ~f:run

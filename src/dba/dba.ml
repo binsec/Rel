@@ -856,6 +856,9 @@ module LValue = struct
        store (Size.Byte.of_bitsize size) endianness e
 end
 
+type serialize_type =
+  | SerializeMemory                      (* mfence *)
+
 
 module Instr = struct
 
@@ -865,6 +868,7 @@ module Instr = struct
     | DJump of Expr.t * tag option
     | If of Expr.t * id jump_target * id
     | Stop of state option
+    | Serialize of serialize_type * id
     | Assert of Expr.t * id
     | Assume of Expr.t * id
     | NondetAssume of LValue.t list * Expr.t * id
@@ -900,6 +904,8 @@ module Instr = struct
   ;;
 
   let stop state = Stop state
+
+  let serialize st nid = Serialize (st, nid)
 
   let ite c goto nid = If (c, goto, nid)
 

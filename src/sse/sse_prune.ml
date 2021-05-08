@@ -27,8 +27,8 @@ let is_djump v =
   | None
   | Some _ -> false
 
-let v_to_intvaddr v =
-  (G.V.addr v).Dba.base |> Virtual_address.to_int
+let v_to_vaddr v =
+  (G.V.addr v).Dba.base
 
 module Distance = struct
   type t = Finite of int | Infinite
@@ -55,11 +55,11 @@ end
 
 let initial default v =
   let open Distance in
-  let goals = Sse_options.GoalAddresses.get ()
-  and avoids = Sse_options.AvoidAddresses.get ()
-  and addr = v_to_intvaddr v in
-  if Basic_types.Int.Set.mem addr avoids then Infinite
-  else if is_djump v || Basic_types.Int.Set.mem addr goals then Finite 0
+  let goals = Sse_utils.get_goal_addresses ()
+  and avoids = Sse_utils.get_goal_addresses ()
+  and vaddr = v_to_vaddr v in
+  if Virtual_address.Set.mem vaddr avoids then Infinite
+  else if is_djump v || Virtual_address.Set.mem vaddr goals then Finite 0
   else default
 
 module Analysis =

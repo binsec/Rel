@@ -62,9 +62,12 @@ module MemoryType : Cli.GENERIC with type t = memory_type
 
 module HighBytes : Cli.INTEGER_SET
 module HighSymbols : Cli.STRING_SET
+(* module CriticalFunction : Cli.STRING *)
 
 type property =
   | CT             (** Check for constant-time *)
+  | SecretErasure  (** Check for safe erasure *)
+
 
 module Property : Cli.GENERIC with type t = property
 
