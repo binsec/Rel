@@ -262,4 +262,4 @@ examples on how to use Binsec/Rel.
   initialization file (see option `-sse-memory path`).
 
 - Another way to get spurious violations is to forget to initialize parts of the
-  memory (see section ("Configure the initial memory")[#configure-the-initial-memory]).
+  memory (see section ["Configure the initial memory"](#configure-the-initial-memory)).
