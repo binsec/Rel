@@ -69,7 +69,7 @@ let executable = function
 let name_of = executable
 
 let default_arguments = function
-  | Boolector -> [ "-m"; "-x"; "--smt2-model"; ]
+  | Boolector -> [ "-m"; "-x"; "--output-format=smt2" ]
   | CVC4 -> [ "--lang=smt2"; "--produce-models"; ]
   | Z3 -> [ "--smt2"; ]
   | Yices -> []
