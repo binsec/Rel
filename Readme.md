@@ -46,7 +46,7 @@ how to use Binsec/Rel.
 sudo apt update
 sudo apt install ocaml ocaml-native-compilers camlp4-extra opam protobuf-compiler libgmp-dev libzmq3-dev llvm-6.0-dev cmake pkg-config
 opam init
-opam switch 4.05.0
+opam switch create 4.05.0
 opam install menhir ocamlgraph piqi zarith zmq.5.0.0 llvm.6.0.0 oUnit
 
 # Additional packages (optional)
