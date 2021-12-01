@@ -279,9 +279,16 @@ struct
                        |> Utils.unsafe_get_opt
                        |> Loader_utils.symbol_interval in
       let end_fun = (Virtual_address.pred end_fun) in
-      Logger.debug ~level:6 "[Initialization] Adding end of %s at %a to avoids."
-        func_name Virtual_address.pp end_fun;
-      Virtual_address.Set.add end_fun addresses
+      (* This is probably wrong *)
+      let rec add_addresses addresses address count =
+        if count = 0 then addresses
+        else begin
+            Logger.debug ~level:6 "[Initialization] Adding end of %s at %a to avoids."
+              func_name Virtual_address.pp address;
+            let addresses = (Virtual_address.Set.add address addresses) in
+            add_addresses addresses (Virtual_address.pred address) (count - 1)
+          end
+      in add_addresses addresses end_fun (Kernel_options.Machine.word_size () / 8)
     in
     let addresses = 
       (* If entrypoint is a function, add ret from function as avoid address *)
