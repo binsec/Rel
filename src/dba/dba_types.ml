@@ -385,7 +385,25 @@ module Instruction = struct
     | SJump _
     | DJump _ -> i
 
-
+  let reloc =
+    let open Dba.Instr in
+    fun ?(outer = fun x -> x) ?(inner = fun x -> x) -> function
+      | Assign (lv, e, id) -> assign lv e (inner id)
+      | If (c, (Dba.JOuter _ as jt), id) -> ite c (outer jt) (inner id)
+      | If (c, Dba.JInner goto, id) ->
+          ite c (Dba.Jump_target.inner (inner goto)) (inner id)
+      | Assert (c, id) -> _assert c (inner id)
+      | Assume (c, id) -> assume c (inner id)
+      | NondetAssume (lvs, c, id) -> non_deterministic_assume lvs c (inner id)
+      | Nondet (lv, region, id) -> non_deterministic lv ~region (inner id)
+      | Undef (lv, id) -> undefined lv (inner id)
+      | Malloc (lv, e, id) -> malloc lv e (inner id)
+      | Free (e, id) -> free e (inner id)
+      | Print (ds, id) -> print ds (inner id)
+      | SJump (Dba.JInner goto, tag) -> static_inner_jump ?tag (inner goto)
+      | SJump ((Dba.JOuter _ as j), tag) -> static_jump ?tag (outer j)
+      | (DJump _ | Stop _ | Serialize _) as i -> i
+               
   let generic_reset_successors ~p ~f instr =
     let new_id id = if p id then f id else id in
     let new_jt = function

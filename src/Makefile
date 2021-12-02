@@ -113,6 +113,7 @@ PACKAGES=\
 	zarith \
 	ocamlgraph \
 	llvm \
+	unisim_archisec.arm32dba \
 	oUnit \
 	str bigarray
 PKG_FLAGS=$(PACKAGES:%=-package %)

@@ -69,6 +69,7 @@ depends: [
   "zarith"
   "zmq"
   "llvm"
+  "unisim_archisec"
 ]
 
 depexts: [

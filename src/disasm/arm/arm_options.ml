@@ -25,3 +25,31 @@ struct
   let shortname = name
 end
 )
+
+type supported_mode = Thumb | Arm
+
+module SupportedMode = Builder.Variant_choice (struct
+  type t = supported_mode
+
+  let name = "supported-mode"
+
+  let default = Arm
+
+  let doc =
+    "Can be used to decode thumb instructions or arm instructions \
+     (default: arm)."
+
+  let to_string = function Thumb -> "thumb" | Arm -> "arm"
+
+  let of_string = function
+    | "thumb" -> Thumb
+    | "arm" -> Arm
+    | x ->
+        raise
+          (Invalid_argument
+             (x
+            ^ " is not a valid arm decoding mode. Expected one of both, thumb \
+               or arm."))
+
+  let choices = [ "thumb"; "arm" ]
+end)

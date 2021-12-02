@@ -20,3 +20,7 @@
 (**************************************************************************)
 
 module Logger : Logger.S
+
+type supported_mode = Thumb | Arm
+
+module SupportedMode : Cli.GENERIC with type t = supported_mode
