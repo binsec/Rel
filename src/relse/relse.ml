@@ -375,6 +375,8 @@ struct
       let state = Env.current_state () in
       Logger.debug ~level:2 "[Exploration][Ite] Condition %a"
         Dba_types.Expr.pp condition;
+      if Instruction.is_conditional_jump (Path_state.get_instruction @@ State.path state)
+      then Relse_stats.add_conditional ();
 
       match Dba.Expr.constant_value condition with
       | Some bv when Bitvector.is_zeros bv ->
