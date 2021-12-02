@@ -122,10 +122,12 @@ let stop vaddr =
 let start i = Dhunk.start i.dba_block
 
 (* Detects if the instruction is a conditional jump *)
-(* Heuristic to detect conditional jump: has multiple outer targets. *)
+(* Heuristic to detect conditional jump: has multiple outer targets or has
+   indirect jump *)
 let is_conditional_jump instruction =
   let dhunk = hunk instruction in
-  Virtual_address.Set.cardinal (Dhunk.outer_jumps dhunk) > 1
+  Virtual_address.Set.cardinal (Dhunk.outer_jumps dhunk) > 1 ||
+  Dhunk.has_indirect_jump dhunk
 
 let is_return instruction = Dhunk.is_return (hunk instruction)
 
