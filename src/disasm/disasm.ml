@@ -903,14 +903,6 @@ let decode raw =
     Logger.warning "Not decoded %s" s;
     exit 1
 
-let decode_llvm raw =
-  try
-    let i = inst_of_raw raw in
-    Logger.result "%a" Llvm_decoder.pretty i.Instruction.dba_block
-  with
-  | X86toDba.InstructionUnhandled s ->
-    Logger.warning "Not decoded %s" s;
-    exit 1
 
 
 let main () =
@@ -929,12 +921,7 @@ let run_decode () =
   if Disasm_options.Decode_instruction.is_set () then
     decode (Disasm_options.Decode_instruction.get ())
 
-let run_decode_llvm () =
-  if Disasm_options.Decode_llvm.is_set () then
-    decode_llvm (Disasm_options.Decode_llvm.get ())
-
 let _ =
   Cli.Boot.enlist ~name:"disassembly run" ~f:main;
   Cli.Boot.enlist ~name:"decode hex" ~f:run_decode;
-  Cli.Boot.enlist ~name:"decode hex as llvm" ~f:run_decode_llvm;
 ;;

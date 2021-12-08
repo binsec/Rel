@@ -512,8 +512,9 @@ let load buffer =
   (file_header, optional_header), sections, symbols, buffer
 
 let load_file_descr file_descr =
-  let buffer =
-    Bigarray.(Array1.map_file file_descr Int8_unsigned C_layout false (-1))
+  let buffer = Bigarray.array1_of_genarray
+                 (Mmap.V1.map_file file_descr Bigarray.Int8_unsigned
+                    Bigarray.C_layout false [| -1 |])
   in load buffer
 
 let load_file path =

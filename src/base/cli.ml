@@ -109,7 +109,7 @@ module Argv = struct
 
   let _compare a1 a2 = String.compare a1.key a2.key
 
-  let create ?(values=Values.Unconstrained) ~key ~doc ~spec =
+  let create ?(values=Values.Unconstrained) ~key ~doc ~spec () =
     { key; doc; spec; values; }
 
   let list_of_args a =
@@ -490,7 +490,7 @@ module Generic_make(D: DECL) = struct
     and key = "debug-level"
     and spec = Scan (fun s -> int_of_string s |> set)
 
-    let cspec = Cli_spec.simple ~key ~doc ~spec
+    let cspec = Cli_spec.simple ~key ~doc ~spec ()
 
     let _ = extend cspec
   end
@@ -512,7 +512,8 @@ module Generic_make(D: DECL) = struct
     let values = ["info"; "debug"; "warning"; "error"; "fatal"; "result"]
     let key = "loglevel"
     let spec = Scan set
-    let cspec = Cli_spec.create ~values:(Values.one_of values) ~key ~doc ~spec
+    let cspec =
+      Cli_spec.create ~values:(Values.one_of values) ~key ~doc ~spec ()
 
     let _ = extend cspec
   end
@@ -530,7 +531,7 @@ module Generic_make(D: DECL) = struct
     and spec = Unit (fun _ -> set true)
     and doc = Printf.sprintf "Quiet all channels for %s" name
 
-    let cspec = Cli_spec.simple ~key ~doc ~spec
+    let cspec = Cli_spec.simple ~key ~doc ~spec ()
 
     let _ = extend cspec
   end
@@ -551,22 +552,22 @@ module Generic_make(D: DECL) = struct
       let key = "help" in
       let spec = Unit (fun () -> Cli.pp Format.std_formatter (); exit 0) in
       let doc = "Display full option list" in
-      let cspec = Cli_spec.simple ~key ~doc ~spec in
+      let cspec = Cli_spec.simple ~key ~doc ~spec () in
       extend cspec;
       (* Add hook for --help *)
-      let cspec = Cli_spec.simple ~key:"-help" ~doc ~spec in
+      let cspec = Cli_spec.simple ~key:"-help" ~doc ~spec () in
       extend cspec;
       (* Add specific hook for -kernel-help *)
       let key = "kernel-help" in
       let spec = Unit (fun () -> usage (); exit 0) in
       let doc = Printf.sprintf "Display options list for %s" name in
-      let cspec = Cli_spec.simple ~key ~doc ~spec in
+      let cspec = Cli_spec.simple ~key ~doc ~spec () in
       extend cspec
     else
       let key = "help" in
       let spec = Unit (fun () -> usage (); exit 0) in
       let doc = Printf.sprintf "Display options list for %s" name in
-      let cspec = Cli_spec.simple ~key ~doc ~spec in
+      let cspec = Cli_spec.simple ~key ~doc ~spec () in
       extend cspec
 
   let _ =
@@ -585,7 +586,7 @@ module Generic_make(D: DECL) = struct
       let doc = Printf.sprintf "%s [%s]" P.doc (P.to_string P.default)
       let spec = Scan (fun s -> set @@ P.of_string s)
       let key = P.name
-      let cspec = Cli_spec.simple ~key ~doc ~spec
+      let cspec = Cli_spec.simple ~key ~doc ~spec ()
 
       let is_default () = !value = default
 
@@ -603,7 +604,7 @@ module Generic_make(D: DECL) = struct
         let doc = Printf.sprintf "%s [%b]" P.doc P.default
         let spec = Unit (fun () -> set (not !value))
         let key = P.name
-        let cspec = Cli_spec.simple ~key ~doc ~spec
+        let cspec = Cli_spec.simple ~key ~doc ~spec ()
 
         let is_default () = !value = P.default
 
@@ -636,7 +637,7 @@ module Generic_make(D: DECL) = struct
         and key = P.name
         let is_default () = !value = P.default
 
-        let cspec = Cli_spec.simple ~key ~doc ~spec
+        let cspec = Cli_spec.simple ~key ~doc ~spec ()
 
         let _ = extend cspec
       end
@@ -664,7 +665,7 @@ module Generic_make(D: DECL) = struct
         and spec = Scan (fun s -> int_of_string s |> set)
         and doc = P.doc
 
-        let cspec = Cli_spec.simple ~key ~spec ~doc
+        let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -692,7 +693,7 @@ module Generic_make(D: DECL) = struct
         and spec = Scan of_string
         and doc = P.doc
 
-        let cspec = Cli_spec.simple ~key ~spec ~doc
+        let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -705,7 +706,7 @@ module Generic_make(D: DECL) = struct
         and spec = Scan of_string
         and doc = P.doc
 
-        let cspec = Cli_spec.simple ~key ~spec ~doc
+        let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -728,7 +729,7 @@ module Generic_make(D: DECL) = struct
         and doc = Printf.sprintf "%s [%f]" P.doc P.default
 
 
-        let cspec = Cli_spec.simple ~key ~spec ~doc
+        let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -756,7 +757,7 @@ module Generic_make(D: DECL) = struct
         and spec = Scan (fun s -> float_of_string s |> set)
         and doc = P.doc
 
-        let cspec = Cli_spec.simple ~key ~spec ~doc
+        let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -784,7 +785,7 @@ module Generic_make(D: DECL) = struct
         and spec = Scan of_string
         and doc = P.doc
 
-        let cspec = Cli_spec.simple ~key ~spec ~doc
+        let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -800,7 +801,7 @@ module Generic_make(D: DECL) = struct
         and spec = Scan of_string
         and doc = P.doc
 
-        let cspec = Cli_spec.simple ~key ~spec ~doc
+        let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -818,7 +819,7 @@ module Generic_make(D: DECL) = struct
         and spec = Scan set
         and doc = Printf.sprintf "%s [%s]" P.doc P.default
 
-        let cspec = Cli_spec.simple ~key ~spec ~doc
+        let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -846,7 +847,7 @@ module Generic_make(D: DECL) = struct
       and spec = Scan set
       and doc = P.doc
 
-      let cspec = Cli_spec.simple ~key ~spec ~doc
+      let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
       let _ = extend cspec
     end
@@ -857,7 +858,7 @@ module Generic_make(D: DECL) = struct
       and spec = Scan of_string
       and doc = P.doc
 
-      let cspec = Cli_spec.simple ~key ~spec ~doc
+      let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
       let _ = extend cspec
     end
@@ -883,7 +884,7 @@ module Generic_make(D: DECL) = struct
       and spec = Scan of_string
       and doc = P.doc
 
-      let cspec = Cli_spec.simple ~key ~spec ~doc
+      let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
       let _ = extend cspec
     end
@@ -916,7 +917,7 @@ module Generic_make(D: DECL) = struct
               else scan_error s values
             )
 
-        let cspec = Cli_spec.create ~values ~key ~spec ~doc
+        let cspec = Cli_spec.create ~values ~key ~spec ~doc ()
 
         let _ = extend cspec
       end
@@ -958,7 +959,7 @@ module Generic_make(D: DECL) = struct
         Scan (fun s -> try set_string s with _ -> scan_error s values)
 
 
-      let cspec = Cli_spec.create ~values ~key ~spec ~doc
+      let cspec = Cli_spec.create ~values ~key ~spec ~doc ()
 
       let _ = extend cspec
     end
@@ -1007,7 +1008,7 @@ module Generic_make(D: DECL) = struct
       and spec = Scan of_string
       and doc = P.doc
 
-      let cspec = Cli_spec.simple ~key ~spec ~doc
+      let cspec = Cli_spec.simple ~key ~spec ~doc ()
 
       let _ = extend cspec
     end
@@ -1023,7 +1024,7 @@ module Make(D: DECL) = struct
     let doc = Printf.sprintf "Enable %s" name
     let key = ""
     let spec = Unit (fun () -> is_enabled := true)
-    let cspec = Cli_spec.simple ~key ~doc ~spec
+    let cspec = Cli_spec.simple ~key ~doc ~spec ()
     let is_enabled () = is_kernel || !is_enabled
     let _ = if not is_kernel then unsafe_extend cspec
   end

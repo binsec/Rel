@@ -113,20 +113,6 @@ module Solver = struct
 end
 )
 
-let of_piqi = function
-  | `boolector -> Boolector
-  | `z3 -> Z3
-  | `cvc4 -> CVC4
-  | `yices -> Yices
-  | _ -> get () (* The current value *)
-
-let to_piqi = function
-  | Boolector -> `boolector
-  | Z3 -> `z3
-  | CVC4 -> `cvc4
-  | Yices -> `yices
-
-
  module Timeout = Builder.Integer(
 struct
   let name = "solver-timeout"

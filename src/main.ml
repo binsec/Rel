@@ -19,27 +19,6 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(* Ugly hack to help ocamlbuild's dependency computation ... *)
-(* open! Ai *)
-open! Bw_main
-open! Sse
-open! Relse
-(* open! Dse
- * open! Drun *)
-open! Disasm
-(* open! Server *)
-(* open! Simulate *)
-open! Formula_main
-(* open! Test *)
-open! Kernel_core
-open! Binpatcher
-open! Xtrasec
-open! Smtlib_utils
-(* open! Concrete *)
-open! Ida
-(* open! Dwarf *)
-
-
 let exclude_suffixes = [".smt"; ".smt2"]
 let set_machdep_on_need () =
   match Kernel_options.ExecFile.get_opt () with
