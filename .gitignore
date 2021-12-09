@@ -63,6 +63,7 @@ plateforme/*.tgz
 /src/smtlib/smtlib_lexer.ml
 /src/smtlib/smtlib_parser.ml
 /src/smtlib/smtlib_parser.mli
+/_build/
 
 # Vim
 .*.swp
