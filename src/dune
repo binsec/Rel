@@ -1,0 +1,28 @@
+(include_subdirs unqualified)
+
+(executable
+ (public_name binsec)
+ (package relse)
+ (name main)
+ (modules main)
+ (flags
+  (:standard -open Binsec))
+ (libraries binsec))
+
+(library
+ (public_name relse)
+ (name binsec)
+ (modules
+  (:standard \ main))
+ (modules_without_implementation
+  loader_sigs
+  loader_types
+  sigs
+  smtlib
+  sse_stats
+  x86Types)
+ (library_flags
+  (:standard -linkall))
+ (flags
+  (:standard -w -3))
+ (libraries str bigarray ocamlgraph zarith mmap unisim_archisec.arm32dba))

@@ -1,4 +1,0 @@
-* :: @[?a] := ?e :: !a :: istainted(Tp, !a) && istainted(Tp, !e) => P
-* :: @[?a] := _  :: !a :: *                                      => C
-* :: *           :: *  :: istainted(Tp, !$$)                     => P
-default => Pc

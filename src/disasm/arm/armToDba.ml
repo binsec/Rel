@@ -39,7 +39,6 @@ module Statistics = struct
                 not_implemented = Hashtbl.create 7;
               }
 
-  let add_bytes bytes h = Hashtbl.add h bytes ()
   let size h = Hashtbl.length h
   let size_unique h =
     let open Basic_types in
@@ -54,17 +53,6 @@ module Statistics = struct
       (size_unique h)
       (fun ppf -> Hashtbl.iter (fun k _ -> Format.fprintf ppf "%x;@ " k))
       h
-
-  let incr_decoded (i, _) t =
-    t.n_instr <- t.n_instr + 1;
-    Hashtbl.replace t.decoded i ()
-
-  let incr_parse_failed ~bytes t =
-    add_bytes bytes t.parse_failed
-
-  let incr_errors ~bytes t = add_bytes bytes t.other_errors
-
-  let incr_not_implemented ~bytes t = add_bytes bytes t.not_implemented
 
 
   let pp ppf t =
@@ -87,29 +75,6 @@ end
 let stats = Statistics.empty
 
 let show_stats ppf () = Statistics.pp ppf stats
-
-let arm_failwith msg =
-  let msg = Format.sprintf "arm : %s" msg in
-  failwith msg
-
-let get_result ic =
-  let b = Buffer.create 2048 in
-  let close_and_return () =
-    ignore @@ Unix.close_process_in ic;
-    Buffer.contents b
-  in
-  try
-    let rec rloop () =
-      Buffer.add_string b (Pervasives.input_line ic);
-      Buffer.add_char b '\n';
-      rloop ()
-    in rloop ()
-  with
-  | End_of_file -> close_and_return ()
-  | _ ->
-    let s = close_and_return () in
-    let msg = Format.sprintf "Could not parse %s" s in
-    arm_failwith msg
 
 
 let find key kvs =
@@ -217,44 +182,136 @@ let parse_result s =
     dummy_parse s
 
 
-let get_and_parse_result ic = get_result ic |> parse_result
+let decode_arm addr bytes =
+  Arm32dba.decode ~thumb:false ~addr bytes |> parse_result
 
+let decode_from_reader_arm addr reader =
+  if addr mod 4 <> 0 then Error (ESize, empty_instruction)
+  else
+    match Lreader.Peek.u32 reader with
+    | exception _ ->
+        Error (ESize, empty_instruction)
+    | bytes -> decode_arm (Int32.of_int addr) (Int32.of_int bytes)
 
-let run_external_decoder addr bytes =
-  let exe = Kernel_options.Decoder.get () in
-  let cmd = Format.sprintf "%s arm 0x%x 0x%x" exe addr bytes in
-  Unix.open_process_in cmd
-;;
+let merge_itblock addr itblock =
+  let n = Array.length itblock in
+  let sizes = Array.make (n + 1) 0 in
+  for i = 1 to n do
+    sizes.(i) <- sizes.(i - 1) + Dhunk.length itblock.(i - 1)
+  done;
+  let inner j i = i + sizes.(j) in
+  let outer =
+    let rec iter i map =
+      if i = n then map
+      else
+        iter (i + 1)
+          (Dba_types.Caddress.Map.add
+             (Dba_types.Caddress.block_start_of_int (addr + (2 * i)))
+             (Dba.Jump_target.inner sizes.(i))
+             map)
+    in
+    let map = iter 1 Dba_types.Caddress.Map.empty in
+    fun j -> function
+      | Dba.JInner goto -> Dba.Jump_target.inner (inner j goto)
+      | Dba.JOuter caddr as jo -> (
+          try Dba_types.Caddress.Map.find caddr map with Not_found -> jo)
+  in
+  let open Dhunk in
+  let j = ref 0 in
+  init sizes.(n) (fun i ->
+      if i >= sizes.(!j + 1) then incr j;
+      Dba_types.Instruction.reloc ~outer:(outer !j) ~inner:(inner !j)
+        (Utils.unsafe_get_opt (inst itblock.(!j) (i - sizes.(!j)))))
 
-let read_sample_size = 4
-(* This value is chosen to be large enough to get a sure opcode hit *)
+let pp_opcode ppf bv =
+  for i = 0 to (Bitvector.size_of bv / 8) - 1 do
+    Format.fprintf ppf "%02x"
+      (Z.to_int
+         Bitvector.(
+           value_of (extract bv { Interval.lo = 8 * i; hi = (8 * (i + 1)) - 1 })))
+  done
 
-let peek_at_most reader size =
-  let rec aux n =
-    if n <= 0 then failwith "Trying to decode an empty bitstream"
-    else
-      try Lreader.Peek.peek reader n
-      with _ -> aux (n - 1)
-  in aux size
-;;
+let itstate w i =
+  if i = 0 then 0 else w land 0xe0 lor ((w lsl (i - 1)) land 0x1f)
+
+let isitw w =
+  let w = w land 0xffff in
+  0xbf00 < w && w <= 0xbfff
+
+let decode_thumb itstate addr bytes =
+  Arm32dba.decode ~thumb:true ~itstate ~addr bytes |> parse_result
+
+let decode_from_reader_thumb addr reader =
+  let addr =
+    if addr mod 2 = 1 then (
+      Lreader.rewind reader 1;
+      addr - 1)
+    else addr
+  in
+  match try Lreader.Peek.u32 reader with _ -> Lreader.Peek.u16 reader with
+  | exception _ ->
+      Error (ESize, empty_instruction)
+  | bytes when not @@ isitw bytes ->
+      decode_thumb 0 (Int32.of_int addr) (Int32.of_int bytes)
+  | word -> (
+      (* it block *)
+      let n =
+        1
+        +
+        if word land 0x01 <> 0 then 4
+        else if word land 0x02 <> 0 then 3
+        else if word land 0x04 <> 0 then 2
+        else if word land 0x08 <> 0 then 1
+        else assert false
+      in
+      let itblock = Array.make n (fst empty_instruction)
+      and ithunks = Array.make n (snd empty_instruction) in
+      let rec init i offset =
+        if i = n then offset
+        else
+          match
+            try Lreader.Peek.peek reader 4
+            with _ -> Lreader.Peek.peek reader 2
+          with
+          | exception _ -> raise @@ Failure ""
+          | bytes -> (
+              match
+                decode_thumb (itstate word i)
+                  (Int32.of_int (addr + offset))
+                  (Int32.of_int (Bitvector.to_int bytes))
+              with
+              | Error _ -> raise @@ Failure ""
+              | Ok (instr, dhunk) ->
+                  itblock.(i) <- instr;
+                  ithunks.(i) <- dhunk;
+                  let size = Size.Byte.to_int instr.Instruction.Generic.size in
+                  Lreader.advance reader size;
+                  init (i + 1) (offset + size))
+      in
+      try
+        let size = init 0 0 in
+        Lreader.rewind reader size;
+        let bytes = Lreader.Peek.peek reader size in
+        let opcode = Format.asprintf "%a" pp_opcode bytes in
+        let mnemonic =
+          Mnemonic.supported itblock (fun ppf it ->
+              Array.iteri
+                (fun i g ->
+                  if i <> 0 then Format.pp_print_string ppf "; ";
+                  Instruction.Generic.pp_mnemonic ppf g)
+                it)
+        in
+        Ok
+          ( Instruction.Generic.create size opcode mnemonic,
+            merge_itblock addr ithunks )
+      with Failure _ -> Error (ESize, empty_instruction))
+
+let unwrap_result = function Error (_, i) -> i | Ok x -> x
 
 let decode_from_reader addr reader =
-  let bytes = peek_at_most reader read_sample_size
-              |> Bitvector.value_of |> Bigint.int_of_big_int in
-  let r = run_external_decoder addr bytes
-          |> get_and_parse_result in
-  match r with
-  | Ok i ->
-    Statistics.incr_decoded i stats;
-    i
-  | Error (etype, i) ->
-    begin
-      match etype with
-      | ESize -> Statistics.incr_errors ~bytes stats
-      | EParser -> Statistics.incr_parse_failed ~bytes stats
-      | EMnemonic -> Statistics.incr_not_implemented ~bytes stats
-    end;
-    i
+  match Arm_options.SupportedMode.get () with
+  | Arm_options.Arm -> decode_from_reader_arm addr reader |> unwrap_result
+  | Arm_options.Thumb -> decode_from_reader_thumb addr reader |> unwrap_result
 
 
 let decode reader (addr:Virtual_address.t) =

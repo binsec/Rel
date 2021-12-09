@@ -56,9 +56,7 @@ type solver =
 
 module Solver : sig
   include Cli.GENERIC with type t = solver
-  val of_piqi : Common_piqi.solver_t -> t
-  val to_piqi : t -> Common_piqi.solver_t
-
+ 
   module Timeout : Cli.INTEGER
   (** Default timeout for solver queries *)
 

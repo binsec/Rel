@@ -20,7 +20,7 @@
 (**************************************************************************)
 
 (** Big integer wrapper for BINSEC *)
-type t
+type t = Z.t
 
 val zero_big_int : t
 val unit_big_int : t

@@ -216,7 +216,13 @@ module Instruction : sig
     (** [generic_reset_successors ~p ~f i]
         applies the transformation [f] on the successor index of [i]
         if predicate [p] is [true]
-    *)
+     *)
+
+  val reloc :
+    ?outer:(Dba.id Dba.Jump_target.t -> Dba.id Dba.Jump_target.t) ->
+    ?inner:(Dba.id -> Dba.id) ->
+    t ->
+    t
 
 end
 
