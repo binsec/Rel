@@ -32,8 +32,6 @@ val read_string:
 
 val read_dba_file : string -> 'a Dba_types.program
 
-val load_dba_definition : Machine.t -> 'a Dba_types.program
-
 val read_optional_config_file : string option -> Infos.t
 (** [read_optional_config_file optfile] parses [optfile] if it is not [None].
     Otherwise, or in case of parse error, it returns [Infos.default].

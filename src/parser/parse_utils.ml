@@ -110,16 +110,6 @@ let read_dba_file filename =
         Dba_types.Caddress.of_virtual_address address }
 
 
-let find_dba_definition isa =
-  let basename =
-    Format.asprintf "%a.dba" Machine.ISA.pp isa in
-  let subdir = Filename.concat "arch" basename in
-  Kernel_options.Share_directories.find_file ~filename:subdir
-
-let load_dba_definition t =
-  let filename = find_dba_definition t in
-  read_dba_file filename
-
 exception Invalid_dba_string of string
 
 let instruction_of_string data =
