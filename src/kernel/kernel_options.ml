@@ -66,47 +66,6 @@ struct
 end
 )
 
-module Share_directories = struct
-  module O = Builder.String_option(
-      struct
-        let name = "share"
-        let doc = "Set additional shared directory"
-      end)
-
-  type t = string list
-  let default_dirs =
-    let dirs = [Config.sharedir] in
-    try Sys.getenv "BINSEC_SHARE" :: dirs
-    with Not_found -> dirs
-
-  let search_dirs = ref default_dirs
-
-  let set l = search_dirs := l @ !search_dirs
-
-
-  let get () = !search_dirs
-
-  let is_set () = O.is_set ()
-  let is_default () = get () = default_dirs
-
-  let pp ppf dirs =
-    Format.pp_open_hovbox ppf 0;
-    List.iter (fun dname -> Format.fprintf ppf "%s;@ " dname) dirs;
-    Format.pp_close_box ppf ()
-
-  let find_file ~filename =
-    let dirs = get () in
-    let rec loop = function
-      | [] ->
-        Logger.error "Could not find %s in %a" filename pp dirs;
-        raise Not_found
-      | d :: dirs ->
-        let fname = Filename.concat d filename in
-        if Sys.file_exists fname && not (Sys.is_directory fname) then fname
-        else loop dirs
-    in loop dirs
-end
-
 
 module ExecFile =
   Builder.String_option(

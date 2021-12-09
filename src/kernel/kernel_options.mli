@@ -61,9 +61,5 @@ module Describe_binary: Cli.BOOLEAN
 (** {b Experimental purposes only} *)
 module Experimental : Cli.BOOLEAN
 
-module Share_directories : sig
-  include Cli.STRING_LIST
-  val find_file : filename:string -> string
-end
 
 module Version : Cli.BOOLEAN
