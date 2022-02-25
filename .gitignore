@@ -64,6 +64,7 @@ plateforme/*.tgz
 /src/smtlib/smtlib_parser.ml
 /src/smtlib/smtlib_parser.mli
 /_build/
+/_opam/
 
 # Vim
 .*.swp
