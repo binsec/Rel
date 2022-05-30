@@ -362,22 +362,19 @@ let pp fmt stat =
 let pp_csv ~with_header ~label ~fp ~dd ~untainting fmt stat =
   let total_qr = get_total () in
   if with_header then
-    Format.fprintf fmt "label, fp, dd, untainting,\
-                        Explor SAT, Explor UNSAT, Explor other, Explor \
-                        total, Explor time, CF SAT, CF UNSAT, CF \
-                        other, CF total, CF time, Mem SAT,Mem UNSAT, \
-                        Mem other, Mem total, Mem time, Insec SAT, \
-                        Term other, Term total, Term time, Term SAT, \
-                        Insec UNSAT, Insec other, Insec total, Insec \
-                        time, Model total, Model time, Enum total, \
-                        Enum time, Total SAT, Total UNSAT, Total \
-                        other, Total total, Total time, average query \
-                        size, max query size, done checks, spared \
-                        checks, paths, conditions, forks, \
-                        dba_instructions, x86instructions, wall time, \
-                        violations, status, exit code, MAX_DEPTH, \
-                        MAX_PATH, TIMEOUT, store, canonical, mem_type, \
-                        solver, bopt\n";
+    Format.fprintf fmt "label,fp,dd,untainting,\
+                        Explor SAT,Explor UNSAT,Explor other,Explor total,\
+                        Explor time,CF SAT,CF UNSAT,CF other,CF total,CF \
+                        time,Mem SAT,Mem UNSAT,Mem other,Mem total,Mem \
+                        time,Term SAT,Term UNSAT,Term other,Term total,Term \
+                        time,Insec SAT,Insec UNSAT,Insec other,Insec total,\
+                        Insec time,Model total,Model time,Enum total,Enum \
+                        time,Total SAT,Total UNSAT,Total other,Total total,\
+                        Total time,average query size,max query size,done \
+                        checks,spared checks,paths,conditions,forks,\
+                        dba_instructions,x86instructions,wall time,\
+                        violations,status,exit code,MAX_DEPTH,MAX_PATH,\
+                        TIMEOUT,store,canonical,mem_type,solver,bopt\n";
   Format.fprintf fmt "%s,%s,%d,%d," label fp dd untainting;
   print_query_record_csv fmt !(stat.exploration_queries); 
   print_query_record_csv fmt !(stat.control_insecurity_queries);
