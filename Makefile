@@ -32,7 +32,7 @@ OCAML_COMPILER ?= $(shell opam switch list | grep -m 1 -oe "ocaml-system[^ ]*")
 
 _opam:
 	opam switch create . $(OCAML_COMPILER) --no-install
-	opam install tuareg merlin user-setup unisim_archisec mmap -y
+	opam install "yojson<2.0.0" tuareg merlin user-setup unisim_archisec mmap -y
 	opam user-setup install
 	opam pin add . -n
 	opam install binsec --deps-only --with-test --with-doc -y
