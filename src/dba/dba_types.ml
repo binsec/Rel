@@ -337,7 +337,7 @@ module AddressStack = struct
 end
 
 
-type 'a dbainstrmap = (Dba.Instr.t * 'a option) Caddress.Map.t
+type dbainstrmap = Dba.Instr.t Caddress.Map.t
 
 
 module Declarations = struct
@@ -571,10 +571,10 @@ type write_perm = Write of bool
 type exec_perm =  Exec of bool
 type permissions = Dba.Expr.t * (read_perm * write_perm * exec_perm)
 
-type 'a program = {
+type program = {
   start_address : Dba.address;
   declarations : Declarations.t;
   permissions: permissions list Region.Map.t * Dba.Expr.t Rights.t;
   initializations : Dba.Instr.t list;
-  instructions : 'a dbainstrmap;
+  instructions : dbainstrmap;
 }

@@ -30,7 +30,7 @@ val read_file:
 val read_string:
   parser:('a -> Lexing.lexbuf -> 'b) -> lexer:'a -> string:string -> 'b
 
-val read_dba_file : string -> 'a Dba_types.program
+val read_dba_file : string -> Dba_types.program
 
 val read_optional_config_file : string option -> Infos.t
 (** [read_optional_config_file optfile] parses [optfile] if it is not [None].

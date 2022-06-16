@@ -187,7 +187,7 @@ module Mk = struct
     let instructions =
       List.fold_left
         (fun map (address, instruction) ->
-           Dba_types.Caddress.Map.add address (instruction, None) map)
+           Dba_types.Caddress.Map.add address instruction map)
         Dba_types.Caddress.Map.empty instructions in
     let initializations =
       fill_sizes declarations initializations

@@ -98,7 +98,7 @@ module Mk : sig
     Dba.Instr.t list ->
     Dba.address ->
     Dba.LValue.t list ->
-    (Dba_types.Caddress.Map.key * Dba.Instr.t) list -> 'a Dba_types.program
+    (Dba_types.Caddress.Map.key * Dba.Instr.t) list -> Dba_types.program
 
   module Predicates : sig
     val of_list :
