@@ -29,6 +29,10 @@ cd binsec-rel
 # Install Binsec/Rel and its dependencies
 make switch
 make
+
+you might have an issue with the make because opam does not see unisim_archisec.arm32dba. To fix it, downgrade
+unisim_archisec to version 0.0.1 with :
+opam install opam install unisim_archisec.0.0.1.
 ```
 Binsec executable is located under `_build/install/default/bin/binsec`.
 
