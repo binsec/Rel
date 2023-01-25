@@ -1427,9 +1427,8 @@ let lift_call src nextaddr _sreg =
     Predba.static_jump (strange_addr_of_int64 src) ?tag ]
 
 
-let lift_dcall (gop:reg32 genop) nextaddr sreg =
+let lift_dcall gop nextaddr sreg =
   let open Dba in
-(* | Address { addrMode; addrDisp; addrBase; addrIndex } -> *)
   match gop with
   | Reg ESP
   | Address { addrBase = Some ESP; _ }
