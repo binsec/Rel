@@ -1427,16 +1427,31 @@ let lift_call src nextaddr _sreg =
     Predba.static_jump (strange_addr_of_int64 src) ?tag ]
 
 
-let lift_dcall gop nextaddr sreg =
+let lift_dcall (gop:reg32 genop) nextaddr sreg =
   let open Dba in
-  (* let sreg = match sreg with None -> Some SS | _ -> sreg in *)
-  [ Predba.assign (esp_lval) (Expr.sub esp_expr four_32);
-    Predba.assign (lhs_of_mem32 esp_expr)
-      (Expr.constant (Bitvector.create
-                        (Virtual_address.to_bigint nextaddr.Dba.base) 32));
-    Predba.dynamic_jump (disas_expr gop `M32 sreg)
-      ~tag:(Dba.Call nextaddr)
-  ]
+(* | Address { addrMode; addrDisp; addrBase; addrIndex } -> *)
+  match gop with
+  | Reg ESP
+  | Address { addrBase = Some ESP; _ }
+  | Address { addrIndex = Some (_, ESP); _ } ->
+    let tmp_lv = Dba.LValue.temporary "temp32" (Size.Bit.create 32) in
+    let tmp_rv = Dba.Expr.temporary ~size:32 "temp32"  in
+    [ Predba.assign tmp_lv (disas_expr gop `M32 sreg);
+      Predba.assign (esp_lval) (Expr.sub esp_expr four_32);
+      Predba.assign (lhs_of_mem32 esp_expr)
+        (Expr.constant (Bitvector.create
+                          (Virtual_address.to_bigint nextaddr.Dba.base) 32));
+      Predba.dynamic_jump tmp_rv
+        ~tag:(Dba.Call nextaddr)
+    ]
+   | _ ->
+     [ Predba.assign (esp_lval) (Expr.sub esp_expr four_32);
+       Predba.assign (lhs_of_mem32 esp_expr)
+         (Expr.constant (Bitvector.create
+                           (Virtual_address.to_bigint nextaddr.Dba.base) 32));
+       Predba.dynamic_jump (disas_expr gop `M32 sreg)
+         ~tag:(Dba.Call nextaddr)
+     ]
 
 
 let lift_ret _sreg =
