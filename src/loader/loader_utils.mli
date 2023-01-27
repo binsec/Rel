@@ -23,7 +23,7 @@
 
 val find_section_by_name : string -> Loader.Img.t -> Loader.Section.t
 
-val section_slice_by_name : string -> Loader.Img.t -> int * int
+val section_slice_by_name : string -> Loader.Img.t -> (int * int) option
 (** [section_slice section_name img] returns the interval [lo, hi] of virtual
     addresses defining the section [section_name].
 *)
@@ -35,7 +35,7 @@ val find_section_by_address_exn :
   address:int -> Loader.Img.t -> Loader.Section.t
 (** @raise Failure exception if no such section exists *)
 
-val section_slice_by_address : address:int -> Loader.Img.t -> int * int
+val section_slice_by_address : address:int -> Loader.Img.t -> (int * int) option
 
 val find_section:
   p:(Loader.Section.t -> bool) -> Loader.Img.t -> Loader.Section.t option
@@ -63,7 +63,6 @@ val symbol_interval : Loader.Symbol.t -> Virtual_address.t * Virtual_address.t
 
 val symbol_interval_by_name : name:string -> Loader.Img.t ->
   (Virtual_address.t * Virtual_address.t) option
-
 val belongs_to_symbol : Loader.Symbol.t -> Virtual_address.t -> bool
 (** [belongs_to_symbol symbol addr] Returns [true] if the address
     [addr] is locate in the [symbol] (i.e. in the range

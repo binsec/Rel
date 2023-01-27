@@ -422,7 +422,8 @@ end
 (* The default interval end is the section's end address *)
 let compute_interval_end ~from_address ~img =
   let _, section_end =
-    Loader_utils.section_slice_by_address ~address:from_address img in
+    Loader_utils.section_slice_by_address ~address:from_address img
+    |> Option.get in
   Logger.info "@[<h>Using section until %x@]" section_end;
   Virtual_address.create from_address,
   Virtual_address.create section_end
@@ -620,7 +621,8 @@ let disassemble_slice
 
 let disassemble_section ?(program=Program.empty) img section_name =
   let sec_start, sec_end =
-    Loader_utils.section_slice_by_name section_name img in
+    Loader_utils.section_slice_by_name section_name img
+    |> Option.get in
   Logger.debug "Disassembling section %s : [0x%x -- 0x%x]"
     section_name (sec_start:>int) (sec_end:>int);
   let slice_end = Virtual_address.create sec_end in

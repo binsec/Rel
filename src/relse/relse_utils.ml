@@ -59,11 +59,12 @@ let is_loadable addr =
   | None -> false
   | Some section ->
     let name = Loader.Section.name section in
-    Basic_types.String.Set.mem name (Sse_options.LoadSections.get()) ||
-    Sse_options.LoadROSections.get() &&
-    Loader.Section.(has_flag Loader_types.Read section &&
-                    not (has_flag Loader_types.Write section))
-
+    let res = Basic_types.String.Set.mem name (Sse_options.LoadSections.get()) ||
+              Sse_options.LoadROSections.get() &&
+              Loader.Section.(has_flag Loader_types.Read section &&
+                              not (has_flag Loader_types.Write section)) in
+    Logger.debug ~level:5 "[is_loadable] %s = %s" name (if res then "True" else "False");
+    res
 
 let read_bitvector addr sz =
   let b = Buffer.create (2 * sz) in

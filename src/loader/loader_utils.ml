@@ -79,24 +79,24 @@ let belongs_to_symbol_by_name ~name img addr =
 
 (* { End of Manipulation of symbols } *)
 
-
 let interval section =
   let open Loader_types in
   let sec_start = (Loader.Section.pos section).virt  in
-  let sec_end = sec_start + (Loader.Section.size section).virt - 1 in
-  sec_start, sec_end
+  let size = (Loader.Section.size section).virt in
+  if size < 1 then  None
+  else Some (sec_start, (sec_start + size - 1))
 
 
 let in_section section addr =
-  let open Loader_types in
-  let lo = (Loader.Section.pos section).virt
-  and sz = (Loader.Section.size section).virt in
-  let hi = lo + sz in
-  addr >= lo && addr < hi
+  match interval section with
+  | Some (sec_start, sec_end) -> addr >= sec_start && addr <= sec_end
+  | None -> false
+
 
 let find_section ~p img =
   try Some (Array_utils.find p (Loader.Img.sections img))
   with Not_found -> None
+
 
 let find_section_by_address ~address img =
   find_section ~p:(fun s -> in_section s address) img

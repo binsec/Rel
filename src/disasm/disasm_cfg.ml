@@ -30,7 +30,8 @@ let do_disasm entry =
   let htbl = H.create 257 in
   let callees = H.create 17 in
   let lo,hi =
-    Loader_utils.(section_slice_by_name ".text" (Kernel_functions.get_img ())) in
+    Loader_utils.(section_slice_by_name ".text" (Kernel_functions.get_img ()))
+    |> Option.get in
   let cfg =
     Disasm_core.fold
       (fun cfg wlst inst set ->

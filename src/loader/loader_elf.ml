@@ -740,8 +740,15 @@ struct
   let flag s = s.Shdr.flags
   let pos s = { raw = s.Shdr.offset; virt = s.Shdr.addr }
   let size s =
-    let raw = if Shdr.(s.kind = SHT.NOBITS) then 0 else s.Shdr.size in
-    { raw; virt = s.Shdr.size }
+    let raw =
+      if Shdr.(s.kind = SHT.NOBITS) then 0 else s.Shdr.size in
+    let virt =
+      (* Special case for .tbss  *)
+      (* See: https://stackoverflow.com/questions/25501044/gcc-ld-overlapping-sections-tbss-init-array-in-statically-linked-elf-bin *)
+      if Shdr.(s.kind = SHT.NOBITS) && (Shdr.SHF.is (flag s) Shdr.SHF.TLS)
+      then 0 else s.Shdr.size
+    in
+    { raw; virt }
 
   let header s = s
   let has_flag f s =
