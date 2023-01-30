@@ -54,8 +54,6 @@ let keywords = [
   "nondet_assume" , NONDETASSUME ;
   "cst"           , CONSTANT ;
   "stack"         , STACK ;
-  "malloc"        , MALLOC ;
-  "free"          , FREE ;
   "var"           , VAR;
   "print"         , PRINT;
   "from"          , FROM;
@@ -98,7 +96,7 @@ let hex = '0' ['x']['0'-'9''A'-'F''a'-'f']+
 let bin = '0' ['b']['0''1']+
 let alpha = ['a'-'z''A'-'Z']
 let alpha_num = (alpha | digit)
-let ident = alpha (alpha_num | '_')*
+let ident = '_'* alpha (alpha_num | '_')*
 
 rule token = parse
   | "@"             { AT }

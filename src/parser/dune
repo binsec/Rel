@@ -1,5 +1,6 @@
 (menhir
- (modules parser))
+ (modules parser)
+ (flags --fixed-exception))
 
 (ocamllex
  (modules lexer))

@@ -91,7 +91,7 @@
 %type <Dba.Instr.t> instruction_eof
 
 %start dhunk_substitutions_eof
-%type <(Virtual_address.t * Dhunk.t) list> dhunk_substitutions_eof
+%type <(Loader_utils.Binary_loc.t * Dhunk.t) list> dhunk_substitutions_eof
 
 %start body
 %type <(Dba_types.Caddress.Map.key * Dba.Instr.t) list> body
@@ -415,8 +415,8 @@ dhunk_eof:
 ;
 
 dhunk_substitution:
-| addr=HEXA; ARROW; dh=dhunk
-  { (Virtual_address.of_bitvector @@ Bitvector.of_string addr, dh)}
+| addr=binary_loc; ARROW; dh=dhunk
+  { (addr, dh)}
 ;
 
 dhunk_substitutions_eof:

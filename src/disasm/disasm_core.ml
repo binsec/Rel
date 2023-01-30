@@ -121,13 +121,44 @@ let decoder_of_machine () =
     let msg = Format.asprintf "missing ISA %a" Machine.pp isa in
     Errors.not_yet_implemented msg
 
+let decode_replacement = ref None
+
+(** parses the option -disasm-decode-replacement and memoises the result *)
+let get_decode_replacement () =
+  match !decode_replacement with
+  | None -> begin
+      let map = match Disasm_options.Decode_replacement.get_opt() with
+        | None -> Virtual_address.Map.empty
+        | Some(str) -> begin
+            let l = Parse_utils.read_string
+                ~parser:Parser.dhunk_substitutions_eof
+                ~lexer:Lexer.token ~string:str in
+            let img = Kernel_functions.get_img () in
+            let map = List.fold_left (fun acc (loc, dhunk) ->
+                match Loader_utils.Binary_loc.to_virtual_address ~img loc with
+                | Some addr -> Virtual_address.Map.add addr dhunk acc
+                | None -> Logger.fatal "unable to parse the address %a"
+                            Loader_utils.Binary_loc.pp loc
+              ) Virtual_address.Map.empty l
+            in
+            map
+          end
+      in
+      begin
+        decode_replacement := Some map;
+        map
+      end
+    end
+  | Some x -> x
+
+
 let decode (vaddress:Virtual_address.t) =
   let decoder = decoder_of_machine () in
   let reader=
     Lreader.of_img (Kernel_functions.get_img ()) ~cursor:(vaddress:>int) in
   let instr,next = decode_at_address decoder reader vaddress in
   try
-    let repl = Disasm_options.Decode_replacement.get() in
+    let repl = get_decode_replacement () in
     let subst = Virtual_address.Map.find vaddress repl in
     let open Instruction in
     Instruction.create instr.address instr.size instr.opcode instr.mnemonic subst,next

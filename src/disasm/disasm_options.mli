@@ -48,7 +48,7 @@ module Disassembly_mode : Cli.GENERIC with type t = disassembly_mode
 
 module Decode_instruction : Cli.STRING_OPT
 
-module Decode_replacement : Cli.GENERIC with type t = Dhunk.t Virtual_address.Map.t
+module Decode_replacement : Cli.STRING_OPT
 
 module Decode_llvm : Cli.STRING_OPT
 

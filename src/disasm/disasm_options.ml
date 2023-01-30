@@ -125,30 +125,12 @@ module Decode_instruction =
 
 
 module Decode_replacement =
-  (* Note: we use any instead of a list, because we ',' in the dba
-     could be wrongly interpreted by the Cli. *)
-  Builder.Any(struct
-    let name = "decode-replacement"
-    let doc = "Replace instructions with a specific dba blocks. Syntax: (0xaddress -> dhunk)*"
-    type t = Dhunk.t Virtual_address.Map.t
-    let to_string x =
-      if Virtual_address.Map.is_empty x then "no substitution" else
-        Virtual_address.Map.fold (fun addr dhunk acc ->
-            acc ^ (Format.asprintf "0x%a -> %a\n" Virtual_address.pp addr Dhunk.pp dhunk)
-          ) x ""
-    ;;
-    let default = Virtual_address.Map.empty
-    let of_string s =
-      let l = Parser.dhunk_substitutions_eof Lexer.token @@ Lexing.from_string s in
-      let map = List.fold_left (fun acc (addr,dhunk) ->
-          Virtual_address.Map.add addr dhunk acc
-        ) Virtual_address.Map.empty l
-      in
-      Logger.debug "parsed replacements\n%s" (to_string map);
-      map
-    ;;
+  Builder.String_option (struct
+      let name = "decode-replacement"
+      let doc = "Replace instructions with a specific dba blocks. Syntax: (0xaddress -> dhunk)*"
   end)
 ;;
+
 
 module Decode_llvm =
   Builder.String_option(struct
