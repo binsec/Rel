@@ -377,7 +377,6 @@ struct
         Dba_types.Expr.pp condition;
       if Instruction.is_conditional_jump (Path_state.get_instruction @@ State.path state)
       then Relse_stats.add_conditional ();
-
       match Dba.Expr.constant_value condition with
       | Some bv when Bitvector.is_zeros bv ->
         (* Condition evaluates to false *)
@@ -442,6 +441,38 @@ struct
       Logger.debug ~level:3 "[Exploration] Skipping %a" Dba_printer.Ascii.pp_instruction instruction;
       Path_state.set_block_index idx
 
+    let assertion condition idx =
+      let state = Env.current_state () in
+      Logger.debug ~level:2 "[Exploration][Assert] Assert with condition %a"
+        Dba_types.Expr.pp condition;
+      (* Build continuation state *)
+      (* continue_cond := condition != 0 in left /\ condition != 0 in right *)
+      let cont_cond = condition
+                      |> Relse_smt.Translate.expr (State.symbolic_state state)
+                      |> Rel_expr.apply (Formula.mk_bv_distinct Formula.mk_bv_zero)
+                      |> Rel_expr.fold0 Formula.mk_bl_and in
+      let cont_state = State.path state
+                       |> Path_state.set_block_index idx
+                       |> fun ps -> Path_state.add_assertion cont_cond ps in
+      (* Check if assertion can fail *)
+      (* fail_cond := condition = 0 in left \/ condition = 0 in right *)
+      let fail_cond = Formula.mk_bl_not cont_cond in
+      match Relse_smt.Solver.check_sat_with_asserts Relse_stats.Exploration
+              [fail_cond] (State.path state) with
+      | SAT, _ -> let model = Relse_smt.Solver.get_model_with_asserts
+                      [fail_cond] (State.path state) in
+        Sse_options.Logger.error
+          "@[<v 2> Assertion failed %@ %a@ %a@]"
+          Path_state.pp_loc (State.path state)
+          Smt_model.pp model;
+      | UNSAT, _ ->
+        Logger.debug ~level:10 "@[<v 2> Assertion satisfied]";
+        State.set_path state cont_state |> Env.set_current_state
+      | (UNKNOWN | TIMEOUT), _ ->
+        Relse_options.Logger.error "@[Assertion got unknown status %@ %a@]"
+          Path_state.pp_loc (State.path state);
+        State.set_path state cont_state |> Env.set_current_state
+
     (* If comment is activated, this will add, for every formula entry, a
        comment about where it comes from.
        This can be usefull to debug the path predicate translation.  *)
@@ -502,8 +533,12 @@ struct
 	        let state = State.on_path (skip instruction idx) state in
 	        Env.set_current_state state;
 
+         (* Assert some condition *)
+         (* TODO: Do we want to include asserts in relse_insecurity? *)
+        | Dba.Instr.Assert (condition, idx) ->
+          assertion condition idx
+
         | Dba.Instr.Stop _
-        | Dba.Instr.Assert _
         | Dba.Instr.Assume _
         | Dba.Instr.Nondet _
         | Dba.Instr.NondetAssume _

@@ -67,7 +67,7 @@ struct
       | Relse_utils.Mem (size, r_index, r_val) ->
           Sym_state.memory_store ps.symbolic_state size r_index r_val
     in { ps with symbolic_state }
-  
+
   let update_pc ?(checked=false) r_cond ps =
     let current_status = ps.status in
     let symbolic_state = ps.symbolic_state in
@@ -93,7 +93,7 @@ struct
         (* The condition is False, status becomes UNSAT *)
         let symbolic_state = Sym_state.pc_update symbolic_state r_cond
         in { ps with symbolic_state; status = Formula.UNSAT }
-      | _ ->
+      | Relse_utils.UNKNOWN ->
         (* The condition is unknown *)
         let symbolic_state = Sym_state.pc_update symbolic_state r_cond in
         (* Try to solve the new pc *)  
@@ -103,6 +103,22 @@ struct
 
   let update_pc_cond ?(checked=false) condition ps =
     update_pc ~checked condition ps
+
+  let add_assertion assertion ps =
+    let current_status = ps.status in
+    let symbolic_state = ps.symbolic_state in
+    if current_status = Formula.UNSAT then ps
+    else match Relse_utils.solving_attempt assertion with
+      | Relse_utils.TRUE ->
+        (* The assertion is True, status doesn't change *) ps
+      | Relse_utils.FALSE ->
+        (* The assertion is False, status becomes UNSAT *)
+        let symbolic_state = Sym_state.add_assertion assertion symbolic_state
+        in { ps with symbolic_state; status = Formula.UNSAT }
+      | Relse_utils.UNKNOWN ->
+        (* The assertion is unknown *)
+        let symbolic_state = Sym_state.add_assertion assertion symbolic_state in
+        { ps with symbolic_state; status = Formula.UNKNOWN }
 
   let update_pc_dynamic ?(checked=false) r_expr ps =
     update_pc ~checked r_expr ps

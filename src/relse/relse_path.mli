@@ -90,7 +90,10 @@ sig
   (** [update_pc_static r_expr ps] Update the path state [ps] with the
      relational consition [r_expr] after a dynamic jump *)
   val update_pc_dynamic : ?checked:bool -> Formula.bl_term Rel_expr.t -> t -> t
-  
+
+  (* [add_assertion expr ps] Add assertion expr to ps formula *)
+  val add_assertion : Formula.bl_term -> t -> t
+
   (** Initializes the memory at address [addr] *)
   val with_init_mem_at: addr:Bitvector.t -> size:int -> t -> t
 
@@ -107,4 +110,5 @@ sig
     
   (** [pp_path ps path_number] Pretty print the path leading to [ps]*)
   val pp_path : t -> int -> unit
+
 end
