@@ -1,18 +1,23 @@
 # Binsec/Rel: Symbolic Binary Analyzer for Constant-Time and Secret-Erasure
-Binsec/Rel is an extension of the binary analysis plateform
+Binsec/Rel is an extension of the binary analysis platform
 [Binsec](https://github.com/binsec/binsec) that implements relational
 symbolic execution (RelSE) for constant-time and secret-erasure verification.
 
 You can find some use cases to test Binsec/Rel at https://github.com/binsec/rel_bench
+
+/!\ THIS REPOSITORY IS NO LONGER MAINTENED /!\\  
+**But good news**: support for CT has been included in the main [binsec](https://github.com/binsec/binsec) tool, and will benefit from improvement to the main platform (e.g., new architectures, usability)!
+Check their [tutorial](https://github.com/binsec/binsec/blob/master/doc/sse/relse.md) for CT verification!
 
 ### Publications
 For more details about Binsec/Rel for constant-time analysis, you can read the
 [paper](https://binsec.github.io/assets/publications/papers/2020-sp.pdf),
 published at 2020 IEEE Symposium on Security and Privacy (SP).
 
-The artifact for this paper is located on this repository, under the tag
-[SP20](https://github.com/binsec/Rel/tree/SP20).
+There is also a journal extension [published at TOPS](https://binsec.github.io/assets/publications/papers/2022-tops.pdf) with support for secret erasure.
 
+The artifact for the SP paper is located in this repository, under the tag
+[SP20](https://github.com/binsec/Rel/tree/SP20).
 
 
 ## Installation
