@@ -5,7 +5,7 @@ symbolic execution (RelSE) for constant-time and secret-erasure verification.
 
 You can find some use cases to test Binsec/Rel at https://github.com/binsec/rel_bench
 
-/!\ THIS REPOSITORY IS NO LONGER MAINTAINED /!\\  
+**/!\ THIS REPOSITORY IS NO LONGER MAINTAINED /!\\**
 **But good news**: support for CT has been included in the main [binsec](https://github.com/binsec/binsec) tool, and will benefit from improvement to the main platform (e.g., new architectures, usability).
 Check their [tutorial](https://github.com/binsec/binsec/blob/master/doc/sse/relse.md) for CT verification!
 
